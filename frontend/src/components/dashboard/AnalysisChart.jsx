@@ -1,17 +1,19 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-export default function AnalysisChart({ theme, data, selectedDistrict }) {
-    const isDark = theme === 'dark';
-    const axisColor = isDark ? '#94a3b8' : '#64748b'; // slate-400 : slate-500
-    const gridColor = isDark ? '#374151' : '#e2e8f0'; // slate-700 : slate-200
-    const tooltipBg = isDark ? '#1e293b' : '#ffffff';
-    const tooltipBorder = isDark ? '#334155' : '#e2e8f0';
-    const tooltipText = isDark ? '#f1f5f9' : '#0f172a';
+export default function AnalysisChart({ data, selectedDistricts = [] }) {
+    const axisColor = '#64748b'; // slate-500
+    const gridColor = '#e2e8f0'; // slate-200
+    const tooltipBg = '#ffffff';
+    const tooltipBorder = '#e2e8f0';
+    const tooltipText = '#0f172a';
 
     const getTitle = () => {
-        if (selectedDistrict === 'all') return '16개 구·군 비교 분석 (영역별 누적)';
-        return `${selectedDistrict === 'all' ? '부산시 전체' : selectedDistrict} 월별 추세 (영역별 누적)`;
+        if (!selectedDistricts || selectedDistricts.length === 0) return '16개 구·군 비교 분석 (영역별 누적)';
+        if (selectedDistricts.length === 1) return '선택 지역 월별 추세 (영역별 누적)';
+        return `선택 ${selectedDistricts.length}개 지역 비교 분석 (영역별 누적)`;
     };
+
+    const isCompressed = !selectedDistricts || selectedDistricts.length === 0 || selectedDistricts.length > 5;
 
     // Colors matching CSS variables
     const COLORS = {
@@ -24,8 +26,8 @@ export default function AnalysisChart({ theme, data, selectedDistrict }) {
     return (
         <div className="w-full h-full flex flex-col p-4">
             <div className="mb-4">
-                <h3 className="font-bold text-slate-800 dark:text-slate-200">{getTitle()}</h3>
-                <div className="flex gap-4 mt-2 text-xs text-slate-500 dark:text-slate-400">
+                <h3 className="font-bold text-slate-800">{getTitle()}</h3>
+                <div className="flex gap-4 mt-2 text-xs text-slate-500">
                     <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS.housing }}></div>주거</span>
                     <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS.env }}></div>환경</span>
                     <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS.transport }}></div>교통</span>
@@ -41,9 +43,9 @@ export default function AnalysisChart({ theme, data, selectedDistrict }) {
                             stroke={axisColor}
                             fontSize={11}
                             interval={0}
-                            angle={selectedDistrict === 'all' ? -45 : 0}
-                            textAnchor={selectedDistrict === 'all' ? "end" : "middle"}
-                            height={selectedDistrict === 'all' ? 60 : 30}
+                            angle={isCompressed ? -45 : 0}
+                            textAnchor={isCompressed ? "end" : "middle"}
+                            height={isCompressed ? 60 : 30}
                             tick={{ fill: axisColor }}
                             tickLine={false}
                         />
@@ -56,7 +58,7 @@ export default function AnalysisChart({ theme, data, selectedDistrict }) {
                                 borderRadius: '12px',
                                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                             }}
-                            cursor={{ fill: isDark ? '#334155' : '#f1f5f9', opacity: 0.4 }}
+                            cursor={{ fill: '#f1f5f9', opacity: 0.4 }}
                             itemStyle={{ fontSize: '12px' }}
                             labelStyle={{ color: tooltipText, fontWeight: 'bold', marginBottom: '4px' }}
                         />

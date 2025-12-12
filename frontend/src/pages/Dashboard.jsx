@@ -1,15 +1,16 @@
 import { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
-// import { LogOut, User, Sun, Moon, Loader2 } from 'lucide-react';
+import { LogOut, User, Loader2 } from 'lucide-react';
 
 import Sidebar from '../components/Sidebar';
 // Lazy load MapCanvas
 const MapCanvas = lazy(() => import('../components/dashboard/MapCanvas'));
 import FilterPanel from '../components/dashboard/FilterPanel';
 import AnalysisChart from '../components/dashboard/AnalysisChart';
-import AIInsightPanel from '../components/dashboard/AIInsightPanel';
+import AIPersonaPanel from '../components/dashboard/AIPersonaPanel';
 import ScoreGauge from '../components/dashboard/ScoreGauge';
-import AIChatPanel from '../components/dashboard/AIChatPanel';
+import FloatingChatWidget from '../components/dashboard/FloatingChatWidget';
+import PersonaDetailModal from '../components/dashboard/PersonaDetailModal';
 import { DISTRICTS } from '../data/constants';
 import { fetchAnalysisData, fetchScore, fetchInsights, fetchPersonas } from '../data/mockDashboardData';
 
@@ -17,10 +18,31 @@ export default function Dashboard() {
     const [selectedCategories, setSelectedCategories] = useState([]);
     const [userType, setUserType] = useState('all');
     const [username, setUsername] = useState('User');
-    const [theme, setTheme] = useState('light'); // Default to light
-    const [selectedDistrict, setSelectedDistrict] = useState('all'); // Initialize selectedDistrict
-    const [selectedYear, setSelectedYear] = useState('2026'); // Initialize selectedYear
+    // const [theme, setTheme] = useState('light'); // Removed Dark Mode
+    const [selectedDistricts, setSelectedDistricts] = useState([]); // Array for multi-select
+    const [selectedYear, setSelectedYear] = useState('2026');
+    const [facilityTypes, setFacilityTypes] = useState([]); // Array for multi-select
+    const [diagnosticianClasses, setDiagnosticianClasses] = useState([]); // Array for multi-select
+
+    // New State for Persona Modal & Chat
+    const [selectedPersona, setSelectedPersona] = useState(null);
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [activeChatPersona, setActiveChatPersona] = useState(null);
+
     const navigate = useNavigate();
+
+    // Handlers
+    const handleChatWithPersona = useCallback((persona) => {
+        setActiveChatPersona(persona);
+        setIsChatOpen(true);
+    }, []);
+
+    const toggleChat = useCallback(() => {
+        setIsChatOpen(prev => {
+            if (!prev) setActiveChatPersona(null); // Reset to Assistant when opening via FAB
+            return !prev;
+        });
+    }, []);
 
     // Load username
     useEffect(() => {
@@ -29,20 +51,6 @@ export default function Dashboard() {
             setUsername(storedName);
         }
     }, []);
-
-    // Theme initialization and effect
-    useEffect(() => {
-        if (theme === 'dark') {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-        localStorage.setItem('theme', theme);
-    }, [theme]);
-
-    const toggleTheme = () => {
-        setTheme(prev => prev === 'light' ? 'dark' : 'light');
-    };
 
     const handleLogout = () => {
         localStorage.removeItem('access_token');
@@ -63,9 +71,11 @@ export default function Dashboard() {
     const resetFilters = useCallback(() => {
         setSelectedCategories([]);
         setUserType('all');
-        setSelectedDistrict('all'); // Reset district
-        setSelectedYear('2026'); // Reset year
-    }, [setSelectedDistrict]);
+        setSelectedDistricts([]);
+        setSelectedYear('2026');
+        setFacilityTypes([]);
+        setDiagnosticianClasses([]);
+    }, []);
 
     // Dashboard Data State
     const [dashboardData, setDashboardData] = useState({
@@ -80,10 +90,11 @@ export default function Dashboard() {
 
     // Fetch Data on Filter Change
     useEffect(() => {
-        const analysis = fetchAnalysisData(selectedYear, selectedDistrict);
-        const score = fetchScore(selectedYear, selectedDistrict);
-        const insights = fetchInsights(selectedYear, selectedDistrict);
-        const personas = fetchPersonas(selectedYear, selectedDistrict);
+        // Pass arrays to data fetchers (will need to update mock data functions to handle arrays)
+        const analysis = fetchAnalysisData(selectedYear, selectedDistricts);
+        const score = fetchScore(selectedYear, selectedDistricts);
+        const insights = fetchInsights(selectedYear, selectedDistricts);
+        const personas = fetchPersonas(selectedYear, selectedDistricts);
 
         setDashboardData({
             analysis,
@@ -94,10 +105,8 @@ export default function Dashboard() {
 
         // AI Analysis Fetching
         const loadAIAnalysis = async () => {
-            if (selectedDistrict === 'all') {
-                setAiAnalysis(null);
-                return;
-            }
+            // ... existing logic ...
+            if (selectedDistricts.length === 0) { }
 
             setIsAiLoading(true);
             try {
@@ -107,29 +116,17 @@ export default function Dashboard() {
                     grade: score.grade,
                     analysis: analysis.map(a => `${a.category}: ${a.value}`)
                 };
-
-                const { fetchAIAnalysis } = await import('../api');
-                const result = await fetchAIAnalysis(selectedYear, selectedDistrict, summaryContext);
-                setAiAnalysis(result.analysis);
             } catch (error) {
                 console.error("Failed to fetch AI analysis", error);
-                setAiAnalysis(`AI 분석 실패: ${error.response?.data?.detail || error.message}`);
             } finally {
                 setIsAiLoading(false);
             }
         };
-
-        // Debounce slightly to prevent rapid firing
-        const timer = setTimeout(() => {
-            loadAIAnalysis();
-        }, 500);
-
-        return () => clearTimeout(timer);
-
-    }, [selectedYear, selectedDistrict, userType]);
+        // Debounce
+    }, [selectedYear, selectedDistricts, userType, facilityTypes, diagnosticianClasses]);
 
     return (
-        <div className={`dashboard-layout ${theme}`}>
+        <div className="flex h-screen bg-bg-main overflow-hidden font-sans text-slate-800">
             {/* Sidebar with New Filter Props */}
             <Sidebar
                 selectedCategories={selectedCategories}
@@ -137,117 +134,104 @@ export default function Dashboard() {
                 onResetFilters={resetFilters}
                 userType={userType}
                 onSelectUserType={setUserType}
-                selectedDistrict={selectedDistrict}
-                onSelectDistrict={setSelectedDistrict}
+                selectedDistricts={selectedDistricts}
+                onSelectDistricts={setSelectedDistricts}
                 selectedYear={selectedYear}
                 onSelectYear={setSelectedYear}
-                // New Props
-                facilityType={facilityType}
-                onSelectFacilityType={setFacilityType}
-                diagnosticianClass={diagnosticianClass}
-                onSelectDiagnosticianClass={setDiagnosticianClass}
-                theme={theme}
-                toggleTheme={toggleTheme}
+                facilityTypes={facilityTypes}
+                onSelectFacilityTypes={setFacilityTypes}
+                diagnosticianClasses={diagnosticianClasses}
+                onSelectDiagnosticianClasses={setDiagnosticianClasses}
             />
 
             {/* Main Content Area */}
-            <main className="main-content">
+            <main className="flex-1 flex flex-col min-w-0 relative">
 
                 {/* Top Header Area */}
-                <header className="dashboard-header">
-                    <h1 className="header-title">
-                        부산시 지능형 공공디자인 통합 진단 플랫폼 <span className="header-subtitle">(2026년 성과 전망)</span>
+                <header className="h-16 bg-white border-b border-border flex items-center justify-between px-6 shadow-sm z-10 shrink-0">
+                    <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                        <span className="text-primary">부산시</span> 지능형 공공디자인 통합 진단 플랫폼
+                        <span className="text-sm font-normal text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">(2026년 성과 전망)</span>
                     </h1>
-                    <div className="header-controls">
-                        {/* Theme Toggle (Slide Button style handled in CSS or Sidebar, redundant here if Sidebar has it, but let's keep it sync or remove) */}
-                        {/* Removing text/emoji toggle here as per request to have "slide button" - assumed in Sidebar or Header.
-                            Let's implement a nice Slide Toggle here. */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs text-slate-500">{theme === 'dark' ? 'Dark' : 'Light'}</span>
-                            <button
-                                onClick={toggleTheme}
-                                className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 relative ${theme === 'dark' ? 'bg-blue-600' : 'bg-slate-300'}`}
-                            >
-                                <div className={`w-4 h-4 rounded-full bg-white shadow-sm transform transition-transform duration-300 ${theme === 'dark' ? 'translate-x-6' : 'translate-x-0'}`}></div>
-                            </button>
-                        </div>
-
-                        <div className="user-profile">
-                            {/* <User className="w-4 h-4" /> */}
-                            <span>👤</span>
-                            <span className="user-name">{username}</span>
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full">
+                            <User className="w-4 h-4 text-slate-500" />
+                            <span className="text-sm font-medium text-slate-700">{username}</span>
                         </div>
                         <button
                             onClick={handleLogout}
-                            className="logout-btn"
-                            style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                            className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-red-500 transition-colors px-2"
                         >
-                            {/* <LogOut className="w-4 h-4" /> 로그아웃 */}
-                            <span>🚪</span> 로그아웃
+                            <LogOut className="w-4 h-4" /> 로그아웃
                         </button>
                     </div>
                 </header>
 
-                <div className="dashboard-grid-container">
+                <div className="flex-1 p-6 grid grid-cols-12 gap-6 overflow-hidden bg-slate-50">
                     {/* Left Panel (Main Content: Map + Chart) */}
-                    <div className="left-panel">
+                    <div className="col-span-12 lg:col-span-8 flex flex-col gap-6 h-full overflow-hidden">
                         {/* Map Area */}
-                        <div className="dashboard-card map-section">
+                        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden relative group">
                             <Suspense fallback={
-                                <div className="map-loading-overlay">
-                                    <div className="loading-content">
-                                        <span className="loading-spinner">⏳</span>
-                                        <span className="loading-text">지도 모듈 로딩 중...</span>
+                                <div className="absolute inset-0 flex items-center justify-center bg-slate-50">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                                        <span className="text-sm font-medium text-slate-500">지도 모듈 로딩 중...</span>
                                     </div>
                                 </div>
                             }>
                                 <MapCanvas
                                     selectedCategories={selectedCategories}
                                     userType={userType}
-                                    theme={theme}
-                                    selectedDistrict={selectedDistrict}
+                                    theme="light"
+                                    selectedDistricts={selectedDistricts}
                                 />
                             </Suspense>
+                            {/* Decorative border on hover/active could act as 'focus' */}
+                            <div className="absolute inset-0 border-2 border-transparent pointer-events-none transition-colors group-hover:border-primary/10 rounded-2xl"></div>
                         </div>
 
                         {/* Bottom Chart Area */}
-                        <div className="dashboard-card chart-section">
-                            <AnalysisChart theme={theme} data={dashboardData.analysis} selectedDistrict={selectedDistrict} />
+                        <div className="h-72 bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+                            <AnalysisChart data={dashboardData.analysis} selectedDistricts={selectedDistricts} />
                         </div>
                     </div>
 
-                    {/* Right Panel (Side Widgets: Score + Insights + Personas) */}
-                    <div className="right-panel">
-                        <div className="dashboard-card score-section">
+                    {/* Right Panel (Side Widgets: Score + Personas) */}
+                    <div className="col-span-12 lg:col-span-4 flex flex-col gap-6 h-full overflow-y-auto custom-scrollbar pr-1">
+                        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
                             <ScoreGauge score={dashboardData.score} />
                         </div>
 
-                        {/* Combined AI Section for Insights & Chat/Personas */}
-                        <div className="dashboard-card ai-section" style={{ flex: 1, overflow: 'hidden' }}>
-                            <div className="p-4 border-b border-slate-700 bg-slate-800/50">
-                                <h3 className="text-sm font-bold text-slate-300">🤖 AI 우선순위 인사이트 및 권장사항</h3>
-                            </div>
-                            <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
-                                <AIInsightPanel
-                                    insights={dashboardData.insights}
-                                    aiAnalysis={aiAnalysis}
-                                    isLoading={isAiLoading}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="dashboard-card ai-section" style={{ flex: 1, marginTop: '0', minHeight: '300px' }}>
-                            <AIChatPanel
-                                context={{
-                                    district: DISTRICTS.find(d => d.id === selectedDistrict)?.name || selectedDistrict,
-                                    year: selectedYear,
-                                    score: dashboardData.score,
-                                    grade: dashboardData.score >= 80 ? 'A' : dashboardData.score >= 70 ? 'B' : 'C'
-                                }}
+                        {/* Analysis Section Replaced with Persona Panel */}
+                        <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+                            <AIPersonaPanel
+                                personas={dashboardData.personas}
+                                onSelectPersona={setSelectedPersona}
+                                onChatClick={handleChatWithPersona}
                             />
                         </div>
                     </div>
                 </div>
+
+                {/* Modal Overlay */}
+                <PersonaDetailModal
+                    persona={selectedPersona}
+                    onClose={() => setSelectedPersona(null)}
+                />
+
+                {/* Floating Chat Widget */}
+                <FloatingChatWidget
+                    isOpen={isChatOpen}
+                    onToggle={toggleChat}
+                    targetPersona={activeChatPersona}
+                    context={{
+                        district: selectedDistricts.length > 0 ? selectedDistricts.join(', ') : '부산시 전체',
+                        year: selectedYear,
+                        score: dashboardData.score,
+                        grade: dashboardData.score >= 80 ? 'A' : dashboardData.score >= 70 ? 'B' : 'C'
+                    }}
+                />
             </main>
         </div>
     );

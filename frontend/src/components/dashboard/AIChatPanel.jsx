@@ -1,19 +1,40 @@
 import { useState, useRef, useEffect } from 'react';
 import api from '../../api';
-// Inline SVGs
-const Icons = {
-    Bot: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2 2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z" /><path d="M19 11v2a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2Z" /><path d="M12 11V7" /><rect width="16" height="4" x="4" y="15" rx="2" /><path d="M12 21v-2" /></svg>,
-    Send: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z" /><path d="M22 2 11 13" /></svg>,
-    Loader2: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
-};
+import { Bot, Send, Loader2 } from 'lucide-react';
 
 export default function AIChatPanel({ context }) {
-    const [messages, setMessages] = useState([
-        { role: 'system', content: `안녕하세요! ${context.district}의 공공디자인 안전 진단에 대해 궁금한 점을 물어보세요. (예: "현재 가장 위험한 요소가 뭐야?")` }
-    ]);
+    const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef(null);
+
+    // Initialize/Reset Chat based on Context/Persona
+    useEffect(() => {
+        if (context.targetPersona) {
+            const p = context.targetPersona;
+            setMessages([
+                {
+                    role: 'system',
+                    content: `당신은 부산 ${p.address}에 거주하는 ${p.age}세 ${p.name}입니다. 직업은 ${p.job}이고, 취미는 ${p.hobbies}입니다. 평소 "${p.concern}" 문제에 대해 걱정이 많으며, 이와 관련된 안전/공공디자인 개선을 요구하는 시민의 입장에서 대화하세요. 말투는 해당 연령대와 부산 지역 특성을 살려 자연스럽게 하세요.`
+                },
+                {
+                    role: 'assistant',
+                    content: `반갑습니데이. 내는 ${p.address} 사는 ${p.name}이라 하예. ${p.concern} 때문에 요즘 진짜 걱정이 많습니다. 내 이야기 좀 들어보이소.`
+                }
+            ]);
+        } else {
+            setMessages([
+                {
+                    role: 'system',
+                    content: `당신은 부산시 지능형 공공디자인 안전 진단 플랫폼의 AI 어시스턴트입니다. ${context.district}의 데이터(안전점수 ${context.score?.value}점, 등급 ${context.grade})를 바탕으로 사용자의 질문에 전문적이고 친절하게 답하세요.`
+                },
+                {
+                    role: 'assistant',
+                    content: `안녕하세요! ${context.district} 공공디자인 진단 결과에 대해 궁금한 점이 있으신가요? 제가 분석해 드릴까요?`
+                }
+            ]);
+        }
+    }, [context.targetPersona, context.district]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -36,15 +57,17 @@ export default function AIChatPanel({ context }) {
             // Call Backend API
             const response = await api.post('/ai/chat', {
                 message: input,
-                context: context // Pass current dashboard context (district, score, etc.)
+                context: context // Pass current dashboard context (district, score, persona, etc.)
             });
 
             const botMsg = { role: 'assistant', content: response.data.reply };
             setMessages(prev => [...prev, botMsg]);
         } catch (error) {
             console.error("Chat Error:", error);
-            const errorMsg = { role: 'system', content: "죄송합니다. AI 서비스 연결에 문제가 발생했습니다." };
-            setMessages(prev => [...prev, errorMsg]);
+            const errorMsg = { role: 'system', content: "죄송합니다. AI 서비스 연결에 문제가 발생했습니다. (데모 모드: 서버 응답 없음)" };
+            // Fallback for Demo if server fails
+            const fallbackMsg = { role: 'assistant', content: context.targetPersona ? "아이고, 내 목소리가 잘 안 들리는갑네. 다시 말해볼게요." : "잠시 연결이 원활하지 않습니다. 다시 시도해주세요." };
+            setMessages(prev => [...prev, fallbackMsg]);
         } finally {
             setIsLoading(false);
         }
@@ -52,32 +75,25 @@ export default function AIChatPanel({ context }) {
 
     return (
         <div className="flex flex-col h-full w-full bg-transparent">
-            {/* Header */}
-            <div className="flex items-center justify-between p-3 border-b border-slate-700/50 bg-slate-800/30">
-                <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-white shadow-sm">
-                        {Icons.Bot}
-                    </div>
-                    <div>
-                        <h3 className="text-xs font-bold text-slate-200">AI Safety Assistant</h3>
-                        <p className="text-[10px] text-slate-400 leading-none">Powered by BDP-AI</p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                    <span className="text-[10px] text-slate-400">Online</span>
-                </div>
-            </div>
+            {/* Header (Hidden in AIChatPanel because FloatingChatWidget handles it now? Or keep simplified?) 
+               User removed header in previous AIInsightPanel but here it is AIChatPanel.
+               FloatingChatWidget adds its own header.
+               So AIChatPanel can remove its header if intended to be embedded.
+               However, AIChatPanel is also used elsewhere? No, removed from sidebar.
+               So I can remove the header from here and just keep Chat Area + Input Area to avoid double header.
+               Actually FloatingChatWidget has "Header". AIChatPanel logic below has "Header" too (lines 51-65 in original).
+               I should REMOVE the header from AIChatPanel to render cleanly inside FloatingWidget.
+            */}
 
             {/* Chat Area */}
             <div className="flex-1 p-3 overflow-y-auto custom-scrollbar flex flex-col gap-3">
                 {messages.map((msg, idx) => (
                     <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${msg.role === 'user'
-                            ? 'bg-blue-600 text-white rounded-br-none'
+                        <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm shadow-sm ${msg.role === 'user'
+                            ? 'bg-primary text-white rounded-br-none'
                             : msg.role === 'system'
-                                ? 'bg-slate-700/50 text-slate-400 text-xs text-center w-full'
-                                : 'bg-slate-700 text-slate-200 rounded-bl-none'
+                                ? 'bg-slate-100 text-slate-500 text-xs text-center w-full my-2'
+                                : 'bg-white border border-slate-100 text-slate-700 rounded-bl-none'
                             }`}>
                             {msg.content}
                         </div>
@@ -85,9 +101,9 @@ export default function AIChatPanel({ context }) {
                 ))}
                 {isLoading && (
                     <div className="flex justify-start">
-                        <div className="bg-slate-700/50 rounded-2xl rounded-bl-none px-3 py-2 flex items-center gap-2">
-                            <span className="animate-spin text-slate-400">{Icons.Loader2}</span>
-                            <span className="text-xs text-slate-400">분석 중...</span>
+                        <div className="bg-white border border-slate-100 rounded-2xl rounded-bl-none px-3 py-2 flex items-center gap-2 shadow-sm">
+                            <span className="animate-spin text-primary"><Loader2 className="w-4 h-4" /></span>
+                            <span className="text-xs text-slate-500">분석 중...</span>
                         </div>
                     </div>
                 )}
@@ -95,23 +111,23 @@ export default function AIChatPanel({ context }) {
             </div>
 
             {/* Input Area */}
-            <div className="p-3 border-t border-slate-700/50 bg-slate-800/30">
+            <div className="p-3 border-t border-slate-200 bg-white/50 backdrop-blur-sm">
                 <form onSubmit={handleSend} className="relative">
                     <input
                         type="text"
-                        placeholder="안전 진단에 대해 물어보세요..."
-                        className="w-full bg-slate-900/50 border border-slate-700 rounded-full pl-4 pr-10 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-slate-600"
+                        placeholder={context.targetPersona ? "대화하기..." : "안전 진단에 대해 물어보세요..."}
+                        className="w-full bg-slate-100 border border-slate-200 rounded-full pl-4 pr-10 py-2 text-sm text-slate-800 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-slate-400"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         disabled={isLoading}
                     />
                     <button
                         type="submit"
-                        className={`absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${input.trim() && !isLoading ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                        className={`absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${input.trim() && !isLoading ? 'bg-primary text-white hover:bg-primary-hover shadow-sm' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                             }`}
                         disabled={!input.trim() || isLoading}
                     >
-                        {Icons.Send}
+                        <Send className="w-4 h-4" />
                     </button>
                 </form>
             </div>

@@ -28,8 +28,10 @@ const stringToSeed = (str) => {
 }
 
 export const fetchAnalysisData = (year, district) => {
-    // If district is 'all', return data for all districts
-    if (district === 'all') {
+    // Helper to check if we should show all
+    const showAll = !Array.isArray(district) || district.length === 0 || district === 'all';
+
+    if (showAll) {
         return DISTRICTS.map(d => {
             const seed = stringToSeed(`${year}-${d}`);
             const rand = mulberry32(seed);
@@ -41,16 +43,14 @@ export const fetchAnalysisData = (year, district) => {
                 safety: Math.floor(rand() * 40) + 10,
             };
         });
-    } else {
-        // If specific district is selected, maybe break it down by Dong?
-        // For now, let's just return historical data or month-by-month for that district
-        // To keep it compatible with the current chart which expects 'name' (x-axis), 
-        // let's show breakdown by Category capability or Time (Months)
-        // But AnalysisChart expects {name, housing, env...}
-        // Let's return "Months" for single district view to show trend
+    }
+
+    // If single district selected, show monthly trend
+    if (Array.isArray(district) && district.length === 1) {
+        const dCode = district[0];
         const months = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
         return months.map(m => {
-            const seed = stringToSeed(`${year}-${district}-${m}`);
+            const seed = stringToSeed(`${year}-${dCode}-${m}`);
             const rand = mulberry32(seed);
             return {
                 name: m,
@@ -61,10 +61,34 @@ export const fetchAnalysisData = (year, district) => {
             }
         });
     }
+
+    // If multiple districts selected, show comparison
+    if (Array.isArray(district) && district.length > 1) {
+        // Map codes to names
+        const selectedNames = district.map(d => getDistrictName(d));
+        // Filter DISTRICTS to ensure order and existence
+        const targets = DISTRICTS.filter(d => selectedNames.includes(d));
+
+        return targets.map(d => {
+            const seed = stringToSeed(`${year}-${d}`);
+            const rand = mulberry32(seed);
+            return {
+                name: d,
+                housing: Math.floor(rand() * 40) + 10,
+                env: Math.floor(rand() * 40) + 10,
+                transport: Math.floor(rand() * 40) + 10,
+                safety: Math.floor(rand() * 40) + 10,
+            };
+        });
+    }
+
+    return [];
 };
 
 export const fetchScore = (year, district) => {
-    const seed = stringToSeed(`${year}-${district}`);
+    // Handle array input for seed
+    const districtKey = Array.isArray(district) ? district.join(',') : district;
+    const seed = stringToSeed(`${year}-${districtKey}`);
     const rand = mulberry32(seed);
     const score = 60 + Math.floor(rand() * 40); // 60 ~ 100
     const prevScore = 60 + Math.floor(mulberry32(seed + 1)() * 40);
@@ -85,7 +109,8 @@ export const fetchScore = (year, district) => {
 // import { AlertTriangle, Lightbulb, TrendingUp, Info } from 'lucide-react';
 
 export const fetchInsights = (year, district) => {
-    const seed = stringToSeed(`${year}-${district}`);
+    const districtKey = Array.isArray(district) ? district.join(',') : district;
+    const seed = stringToSeed(`${year}-${districtKey}`);
     const rand = mulberry32(seed);
 
     const types = ['danger', 'warning', 'info'];
@@ -96,10 +121,15 @@ export const fetchInsights = (year, district) => {
         info: 'text-yellow-500 dark:text-yellow-400'
     };
 
-    const districtName = district === 'all' ? '부산시 전체' : getDistrictName(district);
+    let districtName = '부산시 전체';
+    if (Array.isArray(district) && district.length > 0) {
+        districtName = district.length === 1 ? getDistrictName(district[0]) : `${district.length}개 지역 복합`;
+    } else if (district !== 'all') {
+        districtName = getDistrictName(district);
+    }
 
     const insights = [];
-    const count = Math.floor(rand() * 3) + 2; // 2 to 4 insights
+    const count = Math.floor(rand() * 5) + 5; // 5 to 9 insights
 
     for (let i = 0; i < count; i++) {
         const type = types[Math.floor(rand() * types.length)];
@@ -119,21 +149,127 @@ export const fetchInsights = (year, district) => {
 };
 
 export const fetchPersonas = (year, district) => {
-    const seed = stringToSeed(`${year}-${district}-persona`);
+    const districtKey = Array.isArray(district) ? district.join(',') : district;
+    const seed = stringToSeed(`${year}-${districtKey}-persona-v2`);
     const rand = mulberry32(seed);
 
-    const avatars = ['👵', '👨‍💼', '👩', '🧑‍🚒', '👮'];
-    const names = ['김철수', '이영희', '박민수', '정수진', '최동훈'];
-    const districtName = district === 'all' ? '부산' : getDistrictName(district);
+    let districtName = '부산';
+    if (Array.isArray(district) && district.length > 0) {
+        districtName = district.length === 1 ? getDistrictName(district[0]) : `선택지역`;
+    } else if (district !== 'all') {
+        districtName = getDistrictName(district);
+    }
+
+    // Predefined Archetypes for consistency
+    const archetypes = [
+        {
+            type: 'senior',
+            names: ['홍길동', '김영자', '박춘식', '이말순', '최억만', '정봉수'],
+            ages: [72, 75, 68, 70, 81, 65],
+            gender: ['남성', '여성', '남성'],
+            tags: [['#액티브시니어', '#낭만어부', '#손자바라기'], ['#시장단골', '#골목수다쟁이'], ['#등산마니아', '#건강제일']],
+            jobs: ['은퇴자', '주부', '자영업'],
+            hobbies: ['여행, 건강, 친구', '손주 돌보기, 요리', '등산, 바둑'],
+            concerns: ['다리가 아파서 걷기 힘들다', '짐 들고 다니기 무겁다', '밤길이 너무 어둡다'],
+            painPoints: [
+                '급경사 계단 위험',
+                '안전손잡이/조명 부재',
+                '중간 쉼터 없음'
+            ],
+            suggestions: [
+                '계단 핸드레일 및 미끄럼 방지 포장 필수',
+                '경사로 중간 쌈지공원(쉼터 벤치) 조성',
+                '고지대 전용 공공 모빌리티 도입 검토'
+            ],
+            effects: [
+                '보행 안전사고 감소',
+                '노년층 외출 빈도 증가'
+            ],
+            avatars: ['👴', '👵']
+        },
+        {
+            type: 'youth',
+            names: ['이서연', '박준호', '최지민', '김민재', '박소담', '정우성'],
+            ages: [22, 24, 21, 23, 20, 26],
+            gender: ['여성', '남성', '여성'],
+            tags: [['#대학생', '#카페탐방러', '#야간도보족'], ['#취준생', '#도서관러'], ['#알바몬', '#뚜벅이']],
+            jobs: ['대학생', '취업준비생', '대학생'],
+            hobbies: ['카페 투어, 인스타', '독서, 게임', '영화, 쇼핑'],
+            concerns: ['늦게 집에 갈 때 무섭다', '버스 배차 간격이 길다', '문화 시설이 부족하다'],
+            painPoints: [
+                '골목길 사각지대 존재',
+                '비상벨 시인성 부족',
+                '노후 가로등 조도 낮음'
+            ],
+            suggestions: [
+                '범죄예방환경설계(CPTED) 적용 확대',
+                '스마트 가로등 및 로고젝터 설치',
+                '안심 귀갓길 조성 및 모니터링 강화'
+            ],
+            effects: [
+                '야간 보행 불안감 해소',
+                '청년층 유동인구 증가'
+            ],
+            avatars: ['👩', '👨', '👧']
+        },
+        {
+            type: 'parent',
+            names: ['정해준', '이미소', '강현우', '박지선', '김태훈', '이수진'],
+            ages: [33, 35, 38, 31, 40, 36],
+            gender: ['남성', '여성', '남성'],
+            tags: [['#경찰관', '#야간순찰', '#동네지킴이'], ['#워킹맘', '#육아전쟁'], ['#딸바보', '#안전제일']],
+            jobs: ['경찰관', '회사원', '자영업'],
+            hobbies: ['운동, 캠핑', '아이와 여행, 독서', '낚시, 요리'],
+            concerns: ['아이들 통학로가 위험하다', '놀이터가 낡았다', '유모차 끌기가 힘들다'],
+            painPoints: [
+                '어린이 보호구역 내 불법주정차',
+                '보도 턱이 높아 유모차 통행 불편',
+                '놀이시설 안전기준 미달'
+            ],
+            suggestions: [
+                '스마트 횡단보도 및 옐로우카펫 설치',
+                '무장애 보행로(Barrier-free) 정비',
+                '안전 인증 친환경 놀이터 리모델링'
+            ],
+            effects: [
+                '어린이 교통사고 제로화',
+                '아이 키우기 좋은 환경 조성'
+            ],
+            avatars: ['👮', '👩‍💼', '👨‍💼']
+        }
+    ];
 
     const feedbacks = [];
-    for (let i = 0; i < 3; i++) {
+    // Generate 8 personas
+    for (let i = 0; i < 8; i++) {
         const innerRand = mulberry32(seed + i);
+        const typeIdx = Math.floor(innerRand() * archetypes.length);
+        const arch = archetypes[typeIdx];
+
+        const nameIdx = Math.floor(innerRand() * arch.names.length);
+        const selectedTagIdx = Math.floor(innerRand() * arch.tags.length);
+
         feedbacks.push({
             id: i,
-            name: `${districtName} 시민 ${names[Math.floor(innerRand() * names.length)]}`,
-            text: `"${year}년 ${districtName}의 변화가 체감되네요. 의견 ${i + 1}입니다."`,
-            avatar: avatars[Math.floor(innerRand() * avatars.length)]
+            name: arch.names[nameIdx],
+            age: arch.ages[nameIdx],
+            gender: arch.gender[nameIdx],
+            address: `${districtName}`,
+            tags: arch.tags[nameIdx] || arch.tags[0],
+            job: arch.jobs[nameIdx] || arch.jobs[0],
+            hobbies: arch.hobbies[nameIdx] || arch.hobbies[0],
+            concern: arch.concerns[nameIdx] || arch.concerns[0],
+            shortComment: `"${arch.concerns[nameIdx] || arch.concerns[0]}"`,
+            fullQuote: `"${districtName}에 살면서 가장 불편한 점은 ${arch.concerns[nameIdx] || arch.concerns[0]}입니다. 특히 요즘 같은 때는 더 걱정이 돼요. 우리 동네가 좀 더 안전하고 살기 좋아졌으면 좋겠어요."`,
+            painPoints: arch.painPoints,
+            suggestions: arch.suggestions,
+            expectedEffects: arch.effects,
+            avatar: arch.avatars[Math.floor(innerRand() * arch.avatars.length)],
+            stats: {
+                suggestion: Math.floor(innerRand() * 300) + 100,
+                report: Math.floor(innerRand() * 500) + 200,
+                diagnosis: Math.floor(innerRand() * 100) + 20
+            }
         });
     }
     return feedbacks;

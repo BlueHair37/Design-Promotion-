@@ -1,25 +1,48 @@
-// Inline Lucide Icons to prevent runtime crashes with library
-const Icons = {
-    Home: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
-    Leaf: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" /><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" /></svg>,
-    Car: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" /><circle cx="7" cy="17" r="2" /><circle cx="17" cy="17" r="2" /></svg>,
-    Shield: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" /></svg>,
-    GraduationCap: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></svg>,
-    Factory: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" /><line x1="17" y1="13" x2="17" y2="13h.01" /><line x1="12" y1="13" x2="12" y2="13h.01" /><line x1="7" y1="13" x2="7" y2="13h.01" /></svg>,
-    Palette: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="13.5" cy="6.5" r=".5" /><circle cx="17.5" cy="10.5" r=".5" /><circle cx="8.5" cy="7.5" r=".5" /><circle cx="6.5" cy="12.5" r=".5" /><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" /></svg>,
-    Heart: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></svg>,
-    RotateCcw: <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></svg>
-};
+import { Home, Leaf, Car, Shield, GraduationCap, Factory, Palette, Heart, RotateCcw } from 'lucide-react';
+import MultiSelectDropdown from './common/MultiSelectDropdown';
+
+const DISTRICT_OPTIONS = [
+    { value: '21090', label: '해운대구' },
+    { value: '21050', label: '부산진구' },
+    { value: '21100', label: '사하구' },
+    { value: '21010', label: '중구' },
+    { value: '21020', label: '서구' },
+    { value: '21030', label: '동구' },
+    { value: '21040', label: '영도구' },
+    { value: '21060', label: '동래구' },
+    { value: '21070', label: '남구' },
+    { value: '21080', label: '북구' },
+    { value: '21110', label: '금정구' },
+    { value: '21120', label: '강서구' },
+    { value: '21130', label: '연제구' },
+    { value: '21140', label: '수영구' },
+    { value: '21150', label: '사상구' },
+    { value: '21310', label: '기장군' }
+];
+
+const FACILITY_OPTIONS = [
+    { value: 'public', label: '공공건축물' },
+    { value: 'street', label: '가로시설물' },
+    { value: 'park', label: '공원/녹지' },
+    { value: 'sign', label: '안내표지판' }
+];
+
+const DIAGNOSTICIAN_OPTIONS = [
+    { value: 'expert_A', label: '전문가 그룹 A' },
+    { value: 'expert_B', label: '전문가 그룹 B' },
+    { value: 'citizen', label: '일반 시민단' },
+    { value: 'public_official', label: '공무원' }
+];
 
 const menuItems = [
-    { id: 'housing', label: '주거', icon: Icons.Home, color: 'cat-housing' },
-    { id: 'environment', label: '환경', icon: Icons.Leaf, color: 'cat-env' },
-    { id: 'transport', label: '교통', icon: Icons.Car, color: 'cat-transport' },
-    { id: 'safety', label: '안전', icon: Icons.Shield, color: 'cat-safety' },
-    { id: 'education', label: '교육', icon: Icons.GraduationCap, color: 'cat-education' },
-    { id: 'industry', label: '산업/일자리', icon: Icons.Factory, color: 'cat-industry' },
-    { id: 'culture', label: '문화/여가', icon: Icons.Palette, color: 'cat-culture' },
-    { id: 'welfare', label: '보건/복지', icon: Icons.Heart, color: 'cat-wellness' },
+    { id: 'housing', label: '주거', icon: <Home size={18} />, color: 'cat-housing' },
+    { id: 'environment', label: '환경', icon: <Leaf size={18} />, color: 'cat-env' },
+    { id: 'transport', label: '교통', icon: <Car size={18} />, color: 'cat-transport' },
+    { id: 'safety', label: '안전', icon: <Shield size={18} />, color: 'cat-safety' },
+    { id: 'education', label: '교육', icon: <GraduationCap size={18} />, color: 'cat-education' },
+    { id: 'industry', label: '산업/일자리', icon: <Factory size={18} />, color: 'cat-industry' },
+    { id: 'culture', label: '문화/여가', icon: <Palette size={18} />, color: 'cat-culture' },
+    { id: 'welfare', label: '보건/복지', icon: <Heart size={18} />, color: 'cat-wellness' },
 ];
 
 export default function Sidebar({
@@ -28,168 +51,138 @@ export default function Sidebar({
     onResetFilters,
     userType,
     onSelectUserType,
-    selectedDistrict,
-    onSelectDistrict,
+    selectedDistricts = [],
+    onSelectDistricts,
     selectedYear,
     onSelectYear,
-    facilityType,
-    onSelectFacilityType,
-    diagnosticianClass,
-    onSelectDiagnosticianClass
+    facilityTypes = [],
+    onSelectFacilityTypes,
+    diagnosticianClasses = [],
+    onSelectDiagnosticianClasses
 }) {
     return (
-        <aside className="sidebar">
-            <div className="sidebar-header">
-                <div className="logo-container">
-                    <span className="text-2xl font-black text-white tracking-tighter">
+        <aside className="w-72 bg-white border-r border-border h-full flex flex-col z-20 shadow-sm transition-all duration-300 font-sans">
+            <div className="h-16 flex items-center px-6 border-b border-border bg-white shrink-0">
+                <div className="flex flex-col">
+                    <span className="text-2xl font-black text-slate-900 tracking-tighter leading-none">
                         Kode<span className="text-primary italic">Korea</span>
                     </span>
-                    <span className="logo-subtext">Busan Design Platform</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Busan Design Platform</span>
                 </div>
             </div>
 
-            <nav className="sidebar-nav custom-scrollbar">
+            <nav className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
 
                 {/* 1. Global Filters */}
-                <div className="nav-section">
-                    <h3 className="nav-title">진단 설정 (Filters)</h3>
+                <div>
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 px-1">진단 설정 (Filters)</h3>
 
-                    <div className="filter-group">
-                        <label className="filter-label">연도 선택</label>
-                        <div className="flex bg-slate-800 rounded p-1">
-                            {['2024', '2025', '2026'].map(year => (
-                                <button
-                                    key={year}
-                                    className={`flex-1 py-1 text-xs rounded transition-colors ${selectedYear === year ? 'bg-primary text-white font-bold' : 'text-slate-400 hover:text-slate-200'}`}
-                                    onClick={() => onSelectYear(year)}
-                                >
-                                    {year}
-                                </button>
-                            ))}
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-text-sub mb-1.5 ml-1">연도 선택</label>
+                            <div className="flex bg-slate-100 rounded-lg p-1">
+                                {['2024', '2025', '2026'].map(year => (
+                                    <button
+                                        key={year}
+                                        className={`flex-1 py-1.5 text-xs rounded-md transition-all ${selectedYear === year ? 'bg-white text-primary font-bold shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'}`}
+                                        onClick={() => onSelectYear(year)}
+                                    >
+                                        {year}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="filter-group">
-                        <label className="filter-label">지역 선택</label>
-                        <select
-                            value={selectedDistrict}
-                            onChange={(e) => onSelectDistrict(e.target.value)}
-                            className="styled-select"
-                        >
-                            <option value="all">부산시 전체</option>
-                            <option value="21090">해운대구</option>
-                            <option value="21050">부산진구</option>
-                            <option value="21100">사하구</option>
-                            <option value="21010">중구</option>
-                            <option value="21020">서구</option>
-                            <option value="21030">동구</option>
-                            <option value="21040">영도구</option>
-                            {/* Add more as needed */}
-                        </select>
-                    </div>
+                        <MultiSelectDropdown
+                            label="지역 선택"
+                            options={DISTRICT_OPTIONS}
+                            selectedValues={selectedDistricts}
+                            onChange={onSelectDistricts}
+                        />
 
-                    {/* New Filters */}
-                    <div className="filter-group">
-                        <label className="filter-label">시설물 종류</label>
-                        <select
-                            value={facilityType}
-                            onChange={(e) => onSelectFacilityType(e.target.value)}
-                            className="styled-select"
-                        >
-                            <option value="all">전체 시설물</option>
-                            <option value="public">공공건축물</option>
-                            <option value="street">가로시설물</option>
-                            <option value="park">공원/녹지</option>
-                            <option value="sign">안내표지판</option>
-                        </select>
-                    </div>
+                        <MultiSelectDropdown
+                            label="시설물 종류"
+                            options={FACILITY_OPTIONS}
+                            selectedValues={facilityTypes}
+                            onChange={onSelectFacilityTypes}
+                        />
 
-                    <div className="filter-group">
-                        <label className="filter-label">진단인 분류</label>
-                        <select
-                            value={diagnosticianClass}
-                            onChange={(e) => onSelectDiagnosticianClass(e.target.value)}
-                            className="styled-select"
-                        >
-                            <option value="all">전체</option>
-                            <option value="expert_A">전문가 그룹 A</option>
-                            <option value="expert_B">전문가 그룹 B</option>
-                            <option value="citizen">일반 시민단</option>
-                            <option value="public_official">공무원</option>
-                        </select>
+                        <MultiSelectDropdown
+                            label="진단인 분류"
+                            options={DIAGNOSTICIAN_OPTIONS}
+                            selectedValues={diagnosticianClasses}
+                            onChange={onSelectDiagnosticianClasses}
+                        />
                     </div>
                 </div>
 
-                <div className="nav-divider"></div>
+                <div className="h-px bg-slate-100 my-2"></div>
 
                 {/* 2. Category Grid */}
-                <div className="nav-section">
-                    <div className="flex items-center justify-between px-1 mb-2">
-                        <h3 className="nav-title">진단 영역 (INTEGRATED)</h3>
+                <div>
+                    <div className="flex items-center justify-between px-1 mb-3">
+                        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">진단 영역</h3>
                         <button
                             onClick={onResetFilters}
-                            className="text-[10px] flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded border border-slate-700 transition-colors"
+                            className="text-[10px] flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-500 px-2 py-1 rounded-md transition-colors"
                         >
-                            {Icons.RotateCcw} 초기화
+                            <RotateCcw size={10} /> 초기화
                         </button>
                     </div>
 
-                    <div className="category-grid">
+                    <div className="grid grid-cols-2 gap-2">
                         {menuItems.map(item => {
                             const isActive = selectedCategories.includes(item.id);
                             return (
                                 <button
                                     key={item.id}
-                                    className={`grid-item ${isActive ? 'active' : ''}`}
+                                    className={`relative flex flex-col items-center justify-center p-3 rounded-xl border transition-all duration-200 group ${isActive ? 'bg-rose-50 border-primary shadow-sm scale-[0.98]' : 'bg-slate-50 border-transparent hover:bg-slate-100 hover:border-slate-200'}`}
                                     onClick={() => onSelectCategory(item.id)}
-                                    style={{
-                                        '--item-color': `var(--${item.color})`
-                                    }}
                                 >
-                                    <span className="item-icon">{item.icon}</span>
-                                    <span className="item-label">{item.label}</span>
-                                    {isActive && <div className="active-indicator"></div>}
+                                    <span className={`mb-1.5 transition-colors ${isActive ? 'text-primary' : 'text-slate-400 group-hover:text-primary'}`}>{item.icon}</span>
+                                    <span className={`text-xs font-medium transition-colors ${isActive ? 'text-primary font-bold' : 'text-slate-500 group-hover:text-slate-900'}`}>{item.label}</span>
+                                    {isActive && <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-primary rounded-full"></div>}
                                 </button>
                             );
                         })}
                     </div>
                 </div>
 
-                <div className="nav-divider"></div>
+                <div className="h-px bg-slate-100 my-2"></div>
 
                 {/* 3. User Type Filter */}
-                <div className="nav-section">
-                    <h3 className="nav-title">데이터 소스 (Source)</h3>
-                    <div className="user-type-selector">
-                        <button
-                            className={`type-btn ${userType === 'all' ? 'active' : ''}`}
-                            onClick={() => onSelectUserType('all')}
-                        >
-                            전체
-                        </button>
-                        <button
-                            className={`type-btn ${userType === 'citizen' ? 'active' : ''}`}
-                            onClick={() => onSelectUserType('citizen')}
-                        >
-                            시민
-                        </button>
-                        <button
-                            className={`type-btn ${userType === 'expert' ? 'active' : ''}`}
-                            onClick={() => onSelectUserType('expert')}
-                        >
-                            전문가
-                        </button>
+                <div>
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 px-1">데이터 소스 (Source)</h3>
+                    <div className="grid grid-cols-3 gap-1 bg-slate-100 rounded-lg p-1">
+                        {[
+                            { id: 'all', label: '전체' },
+                            { id: 'citizen', label: '시민' },
+                            { id: 'expert', label: '전문가' }
+                        ].map(type => (
+                            <button
+                                key={type.id}
+                                className={`text-xs py-2 rounded-md transition-all font-medium ${userType === type.id ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
+                                onClick={() => onSelectUserType(type.id)}
+                            >
+                                {type.label}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
             </nav>
 
-            <div className="sidebar-footer">
-                <div className="system-status">
-                    <h4 className="status-title">시스템 상태</h4>
-                    <div className="status-indicator">
-                        <span className="dot green"></span>
-                        <span className="text">정상 작동 중</span>
+            <div className="p-4 border-t border-border bg-slate-50 shrink-0">
+                <div className="flex items-center gap-3">
+                    <div className="relative">
+                        <span className="flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                        </span>
+                    </div>
+                    <div>
+                        <h4 className="text-xs font-bold text-slate-800">시스템 상태 양호</h4>
+                        <p className="text-[10px] text-slate-500">모든 서비스 정상 작동 중</p>
                     </div>
                 </div>
             </div>

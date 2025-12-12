@@ -46,64 +46,58 @@ export default function Login() {
     };
 
     return (
-        <div className="auth-container">
-            {/* Background Effects */}
-            <div className="auth-bg-effect">
-                <div className="auth-blob-1"></div>
-                <div className="auth-blob-2"></div>
-            </div>
-
+        <div className="flex items-center justify-center min-h-screen p-4">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="auth-card"
+                className="w-full max-w-md bg-bg-card rounded-card shadow-card p-8 relative overflow-hidden"
             >
                 {/* Top Accent Line */}
-                <div className="auth-card-accent"></div>
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-primary-hover"></div>
 
-                <div className="auth-header">
-                    <h1 className="auth-title">
+                <div className="text-center mb-8">
+                    <h1 className="text-3xl font-bold text-primary mb-2">
                         BDP Login
                     </h1>
-                    <p className="auth-subtitle">지능형 공공디자인 통합 진단 플랫폼</p>
+                    <p className="text-text-sub text-sm">지능형 공공디자인 통합 진단 플랫폼</p>
                 </div>
 
                 {error && (
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
-                        className="auth-error"
+                        className="mb-6 p-4 bg-red-50 text-red-500 rounded-lg text-sm border border-red-100"
                     >
                         {error}
                     </motion.div>
                 )}
 
-                <form onSubmit={handleLogin} className="auth-form">
-                    <div className="form-group">
-                        <label className="form-label text-slate-300">Email</label>
+                <form onSubmit={handleLogin} className="space-y-6">
+                    <div>
+                        <label className="block text-sm font-medium text-text-sub mb-2">Email</label>
                         <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg">✉️</span>
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg">✉️</span>
                             <input
                                 type="email"
                                 placeholder="example@busan.go.kr"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                                className="w-full bg-slate-50 border border-border rounded-lg py-3 pl-12 pr-4 text-text-main focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-text-muted"
                                 required
                             />
                         </div>
                     </div>
 
-                    <div className="form-group mt-4">
-                        <label className="form-label text-slate-300">Password</label>
+                    <div>
+                        <label className="block text-sm font-medium text-text-sub mb-2">Password</label>
                         <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg">🔒</span>
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg">🔒</span>
                             <input
                                 type="password"
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                                className="w-full bg-slate-50 border border-border rounded-lg py-3 pl-12 pr-4 text-text-main focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-text-muted"
                                 required
                             />
                         </div>
@@ -112,15 +106,15 @@ export default function Login() {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="auth-button"
+                        className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3.5 rounded-full transition-all shadow-md active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                         {isLoading ? '로그인 중...' : '로그인'}
                     </button>
                 </form>
 
-                <div className="auth-footer">
+                <div className="mt-8 text-center text-sm text-text-sub">
                     계정이 없으신가요?{' '}
-                    <Link to="/signup" className="auth-link">
+                    <Link to="/signup" className="text-primary hover:text-primary-hover font-semibold hover:underline">
                         회원가입
                     </Link>
                 </div>

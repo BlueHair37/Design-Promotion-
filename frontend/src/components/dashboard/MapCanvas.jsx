@@ -1,7 +1,7 @@
-import { MapContainer, TileLayer, CircleMarker, Popup, useMap, useMapEvents, GeoJSON, Pane, Tooltip as LeafletTooltip } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Popup, useMap, Pane, GeoJSON } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEffect, useState, useMemo, memo, useCallback } from 'react';
-// import { Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import L from 'leaflet';
 
 // 부산 중심 좌표
@@ -74,40 +74,30 @@ function ResetViewControl() {
     );
 }
 
-// Region Focus Component (Moved outside to prevent re-creation on render)
-const RegionFocus = ({ selectedCode, data }) => {
-    const map = useMap();
 
-    useEffect(() => {
-        if (!data || !selectedCode) return;
-
-        if (selectedCode === 'all') {
-            map.flyTo(BUSAN_CENTER, 11);
-            return;
-        }
-
-        const feature = data.features.find(f => f.properties.code === selectedCode);
-        if (feature) {
-            const tempLayer = L.geoJSON(feature);
-            map.flyToBounds(tempLayer.getBounds(), { padding: [50, 50] });
-        }
-    }, [selectedCode, data, map]);
-
-    return null;
-};
-
-// Mock Data Points (Moved outside to be stable)
+// Mock Data Points (Detailed Rich Data)
+// Adding images, proposers, dates for richer popups
 const allMockData = [
-    { id: 1, lat: 35.1578, lng: 129.0600, label: "시민 제보: 서면 교차로", type: "citizen", category: "transport", severity: "high" },
-    { id: 2, lat: 35.1790, lng: 129.0750, label: "AI 감지: 시청 인근 보행 위험", type: "expert", category: "safety", severity: "medium" },
-    { id: 3, lat: 35.1000, lng: 128.9600, label: "시민 제보: 사하구 쓰레기 투기", type: "citizen", category: "environment", severity: "high" },
-    { id: 4, lat: 35.2100, lng: 129.0800, label: "전문가 진단: 동래구 문화시설 부족", type: "expert", category: "culture", severity: "low" },
-    { id: 5, lat: 35.1600, lng: 129.1600, label: "시민 제보: 해운대 소음", type: "citizen", category: "environment", severity: "medium" },
+    { id: 1, lat: 35.1578, lng: 129.0600, label: "서면 교차로 무단횡단 다발지역", type: "citizen", category: "transport", severity: "high", proposer: "김철수", proposerRole: "모범운전자", date: "2025.12.10", image: "https://picsum.photos/seed/1/300/200" },
+    { id: 2, lat: 35.1790, lng: 129.0750, label: "시청 인근 보도블럭 파손", type: "expert", category: "safety", severity: "medium", proposer: "AI 감지 시스템", proposerRole: "BDP-AI", date: "2025.12.11", image: "https://picsum.photos/seed/2/300/200" },
+    { id: 3, lat: 35.1000, lng: 128.9600, label: "쓰레기 무단 투기 집중 신고", type: "citizen", category: "environment", severity: "high", proposer: "박영자", proposerRole: "통장", date: "2025.12.09", image: "https://picsum.photos/seed/3/300/200" },
+    { id: 4, lat: 35.2100, lng: 129.0800, label: "동래구 쉼터 부족/벤치 파손", type: "expert", category: "culture", severity: "low", proposer: "이민수", proposerRole: "도시재생센터", date: "2025.12.05", image: "https://picsum.photos/seed/4/300/200" },
+    { id: 5, lat: 35.1600, lng: 129.1600, label: "해운대 해수욕장 소음 민원", type: "citizen", category: "environment", severity: "medium", proposer: "최지민", proposerRole: "대학생", date: "2025.12.08", image: "https://picsum.photos/seed/5/300/200" },
+    { id: 6, lat: 35.1900, lng: 129.1100, label: "연산 교차로 상습 정체 개선", type: "citizen", category: "transport", severity: "medium", proposer: "정우성", proposerRole: "택시기사", date: "2025.12.11", image: "https://picsum.photos/seed/6/300/200" },
+    { id: 7, lat: 35.1200, lng: 129.0400, label: "남항대교 진입로 강풍 위험", type: "expert", category: "safety", severity: "high", proposer: "AI 감지 시스템", proposerRole: "Weather-AI", date: "2025.12.12", image: "https://picsum.photos/seed/7/300/200" },
+    { id: 8, lat: 35.2300, lng: 129.0100, label: "금정산 등산로 미끄럼 사고", type: "expert", category: "environment", severity: "low", proposer: "산림청", proposerRole: "안전팀", date: "2025.12.01", image: "https://picsum.photos/seed/8/300/200" },
+    { id: 9, lat: 35.1500, lng: 129.1300, label: "광안리 해변 플라스틱 쓰레기", type: "citizen", category: "environment", severity: "high", proposer: "GreenBusan", proposerRole: "환경단체", date: "2025.12.07", image: "https://picsum.photos/seed/9/300/200" },
+    { id: 10, lat: 35.2500, lng: 129.2000, label: "기장군 해안도로 노면 파손", type: "expert", category: "safety", severity: "medium", proposer: "도로교통공단", proposerRole: "시설팀", date: "2025.12.10", image: "https://picsum.photos/seed/10/300/200" },
+    { id: 11, lat: 35.0800, lng: 129.0300, label: "영도구 흰여울길 난간 노후", type: "citizen", category: "safety", severity: "high", proposer: "강현우", proposerRole: "주민자치회", date: "2025.12.09", image: "https://picsum.photos/seed/11/300/200" },
+    { id: 12, lat: 35.1400, lng: 129.0000, label: "구덕터널 내부 환기 불량", type: "expert", category: "environment", severity: "medium", proposer: "환경공단", proposerRole: "대기질관리", date: "2025.12.11", image: "https://picsum.photos/seed/12/300/200" },
+    { id: 13, lat: 35.2000, lng: 129.0600, label: "사직구장 경기 시 소음/주차난", type: "citizen", category: "culture", severity: "low", proposer: "김민재", proposerRole: "야구팬", date: "2025.12.03", image: "https://picsum.photos/seed/13/300/200" },
+    { id: 14, lat: 35.1100, lng: 128.9800, label: "감천문화마을 급경사 미끄럼", type: "expert", category: "safety", severity: "high", proposer: "AI 감지 시스템", proposerRole: "Vision-AI", date: "2025.12.12", image: "https://picsum.photos/seed/14/300/200" },
+    { id: 15, lat: 35.1700, lng: 128.9500, label: "엄궁동 공장 지대 악취 신고", type: "citizen", category: "environment", severity: "high", proposer: "이수진", proposerRole: "부녀회장", date: "2025.12.10", image: "https://picsum.photos/seed/15/300/200" }
 ];
 
 
 // MapCanvas Component
-const MapCanvas = memo(({ selectedCategories = [], userType = 'all', theme = 'light', selectedDistrict = 'all' }) => {
+const MapCanvas = memo(({ selectedCategories = [], userType = 'all', selectedDistricts = [] }) => {
     const [geoJsonData, setGeoJsonData] = useState(null);
     const [hoveredDistrict, setHoveredDistrict] = useState(null);
     const [viewState, setViewState] = useState({ center: BUSAN_CENTER, zoom: 11 }); // eslint-disable-line no-unused-vars
@@ -157,23 +147,24 @@ const MapCanvas = memo(({ selectedCategories = [], userType = 'all', theme = 'li
         const severity = getSeverity(feature.properties.code);
         const color = getSeverityColor(feature.properties.code);
 
-        // 지역 선택 시, 선택되지 않은 지역은 흐리게 처리
-        const isSelected = selectedDistrict === feature.properties.code;
-        const isAll = selectedDistrict === 'all';
+        // Check if any districts are selected
+        const hasSelection = selectedDistricts && selectedDistricts.length > 0;
+        const isSelected = hasSelection && selectedDistricts.includes(feature.properties.code);
         const isHovered = hoveredDistrict === feature.properties.code;
 
         let fillOpacity = isHovered ? 0.6 : 0.4;
         let strokeColor = isHovered ? '#3b82f6' : '#64748b'; // Hover: Blue, Default: Slate-500
-        let weight = isHovered ? 3 : 1.5; // Thicker default weight
+        let weight = isHovered ? 3 : 1.5;
 
-        if (!isAll) {
+        // If specific districts selected
+        if (hasSelection) {
             if (isSelected) {
-                fillOpacity = 0.2; // 선택된 지역 내부를 연하게 하여 데이터 포인트 강조
+                fillOpacity = 0.2; // Highlight selected
                 strokeColor = '#2563eb'; // Blue-600
-                weight = 3.5; // Very thick border for selected
+                weight = 3.5;
             } else {
-                fillOpacity = 0.1; // Dim others
-                strokeColor = '#cbd5e1'; // Slate-300 for unselected
+                fillOpacity = 0.1; // Dim unselected
+                strokeColor = '#cbd5e1'; // Slate-300
                 weight = 1;
             }
         }
@@ -183,17 +174,16 @@ const MapCanvas = memo(({ selectedCategories = [], userType = 'all', theme = 'li
             weight: weight,
             opacity: 1,
             color: strokeColor,
-            dashArray: isSelected ? '' : (isAll ? '3' : ''), // Dashed for default view, solid for selected
+            dashArray: isSelected ? '' : (hasSelection ? '3' : ''),
             fillOpacity: fillOpacity
         };
-    }, [hoveredDistrict, selectedDistrict]);
+    }, [hoveredDistrict, selectedDistricts]);
 
     // Interactions for GeoJSON
     const onEachDistrict = (feature, layer) => {
         layer.on({
             mouseover: () => setHoveredDistrict(feature.properties.code),
             mouseout: () => setHoveredDistrict(null),
-            // click handled by parent state ideally, but here we just navigate visually
         });
         layer.bindTooltip(
             `<div><strong>${feature.properties.name}</strong><br/>위험도: ${getSeverity(feature.properties.code)}</div>`,
@@ -205,76 +195,85 @@ const MapCanvas = memo(({ selectedCategories = [], userType = 'all', theme = 'li
     // Detail Visualization Logic (Mock Heatmap for Dongs)
     // --------------------------------------------------------------------------------
     const mockDetailPoints = useMemo(() => {
-        if (!selectedDistrict || selectedDistrict === 'all' || !geoJsonData) return [];
+        if (!selectedDistricts || selectedDistricts.length === 0 || !geoJsonData) return [];
 
-        const feature = geoJsonData.features.find(f => f.properties.code === selectedDistrict);
-        if (!feature) return [];
+        let allPoints = [];
 
-        // Calculate simple bounds from geometry coordinates
-        let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+        selectedDistricts.forEach(code => {
+            const feature = geoJsonData.features.find(f => f.properties.code === code);
+            if (!feature) return;
 
-        const processCoords = (coords) => {
-            coords.forEach(coord => {
-                if (typeof coord[0] === 'number') { // [lng, lat] point
-                    const [lng, lat] = coord;
-                    if (lat < minLat) minLat = lat;
-                    if (lat > maxLat) maxLat = lat;
-                    if (lng < minLng) minLng = lng;
-                    if (lng > maxLng) maxLng = lng;
-                } else {
-                    processCoords(coord);
-                }
-            });
-        };
-        processCoords(feature.geometry.coordinates);
+            // Calculate simple bounds from geometry
+            let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+            const processCoords = (coords) => {
+                coords.forEach(coord => {
+                    if (typeof coord[0] === 'number') {
+                        const [lng, lat] = coord;
+                        if (lat < minLat) minLat = lat;
+                        if (lat > maxLat) maxLat = lat;
+                        if (lng < minLng) minLng = lng;
+                        if (lng > maxLng) maxLng = lng;
+                    } else {
+                        processCoords(coord);
+                    }
+                });
+            };
+            processCoords(feature.geometry.coordinates);
 
-        // Generate ~100 random points within bounds to simulate heatmap
-        const points = [];
-        for (let i = 0; i < 120; i++) {
-            points.push({
-                id: `mock-dong-${i}`,
-                lat: minLat + Math.random() * (maxLat - minLat),
-                lng: minLng + Math.random() * (maxLng - minLng),
-                value: Math.random() // Intensity
-            });
-        }
-        return points;
-    }, [selectedDistrict, geoJsonData]);
+            // Generate random points for this district
+            for (let i = 0; i < 50; i++) {
+                allPoints.push({
+                    id: `mock-dong-${code}-${i}`,
+                    lat: minLat + Math.random() * (maxLat - minLat),
+                    lng: minLng + Math.random() * (maxLng - minLng),
+                    value: Math.random()
+                });
+            }
+        });
+
+        return allPoints;
+    }, [selectedDistricts, geoJsonData]);
 
     // --------------------------------------------------------------------------------
     // Region Focus Component
     // --------------------------------------------------------------------------------
-    const RegionFocus = ({ selectedCode, data }) => {
+    const RegionFocus = ({ selectedCodes, data }) => {
         const map = useMap();
 
         useEffect(() => {
-            if (!data || !selectedCode) return;
+            if (!data || !selectedCodes) return;
 
-            if (selectedCode === 'all') {
+            if (selectedCodes.length === 0) {
                 map.flyTo(BUSAN_CENTER, 11);
                 return;
             }
 
-            const feature = data.features.find(f => f.properties.code === selectedCode);
-            if (feature) {
-                // GeoJSON layer creation just to get bounds is heavy, but let's manual calc logic above
-                // Or simply create a temporary L.geoJSON to get bounds easily
-                const tempLayer = L.geoJSON(feature);
-                map.flyToBounds(tempLayer.getBounds(), { padding: [50, 50] });
+            const features = data.features.filter(f => selectedCodes.includes(f.properties.code));
+
+            if (features.length > 0) {
+                // Create a temporary FeatureGroup to get bounds of all selected features
+                const group = L.featureGroup(features.map(f => L.geoJSON(f)));
+                try {
+                    map.flyToBounds(group.getBounds(), { padding: [50, 50] });
+                } catch (e) {
+                    // Fallback to center if bounds calc fails
+                    console.warn("Bounds calc failed, resetting view");
+                    map.setView(BUSAN_CENTER, 11);
+                }
             }
-        }, [selectedCode, data, map]);
+        }, [selectedCodes, data, map]);
 
         return null;
     };
 
 
     return (
-        <div className="w-full h-full relative z-0 bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+        <div className="w-full h-full relative z-0 bg-slate-50 transition-colors duration-300">
             {isLoading && (
-                <div className="absolute inset-0 z-[1000] flex items-center justify-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+                <div className="absolute inset-0 z-[1000] flex items-center justify-center bg-white/50 backdrop-blur-sm">
                     <div className="flex flex-col items-center gap-2">
                         <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                        <span className="text-sm font-bold text-slate-600 dark:text-slate-300">지도 데이터 로딩 중...</span>
+                        <span className="text-sm font-bold text-slate-600">지도 데이터 로딩 중...</span>
                     </div>
                 </div>
             )}
@@ -288,7 +287,7 @@ const MapCanvas = memo(({ selectedCategories = [], userType = 'all', theme = 'li
                 preferCanvas={true}
             >
                 <MapController />
-                <RegionFocus selectedCode={selectedDistrict} data={geoJsonData} />
+                <RegionFocus selectedCodes={selectedDistricts} data={geoJsonData} />
 
                 {/* VWorld Street Map */}
                 <TileLayer
@@ -297,14 +296,7 @@ const MapCanvas = memo(({ selectedCategories = [], userType = 'all', theme = 'li
                     keepBuffer={4}
                     updateWhenIdle={false}
                     updateWhenZooming={false}
-                    className={theme === 'dark' ? 'map-tiles-dark' : ''}
                 />
-
-                <style>{`
-                    .map-tiles-dark {
-                        filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
-                    }
-                `}</style>
 
                 {/* Choropleth Layer */}
                 {!isLoading && geoJsonData &&
@@ -315,9 +307,9 @@ const MapCanvas = memo(({ selectedCategories = [], userType = 'all', theme = 'li
                     />
                 }
 
-                {/* Mock Detail Heatmap Layer (Show only when a district is selected) */}
+                {/* Mock Detail Heatmap Layer (Show when districts are selected) */}
                 <Pane name="detail-heatmap" style={{ zIndex: 450 }}>
-                    {selectedDistrict !== 'all' && mockDetailPoints.map((pt, idx) => (
+                    {selectedDistricts.length > 0 && mockDetailPoints.map((pt, idx) => (
                         <CircleMarker
                             key={pt.id}
                             center={[pt.lat, pt.lng]}
@@ -331,6 +323,9 @@ const MapCanvas = memo(({ selectedCategories = [], userType = 'all', theme = 'li
                     ))}
                 </Pane>
 
+                {/* Custom High Z-Index Pane for Popups to avoid overlapping */}
+                <Pane name="custom-popup-pane" style={{ zIndex: 1000 }} />
+
                 {/* Data Points - Using Pane to bring them to front (z-index 500 > overlay 400) */}
                 <Pane name="top-markers" style={{ zIndex: 500 }}>
                     {filteredData.map((data) => (
@@ -341,16 +336,44 @@ const MapCanvas = memo(({ selectedCategories = [], userType = 'all', theme = 'li
                             pathOptions={{
                                 color: 'white',
                                 weight: 2,
-                                fillColor: data.severity === 'high' ? '#dc2626' : '#16a34a',
                                 fillOpacity: 0.9,
+                                fillColor: data.severity === 'high' ? '#dc2626' : (data.severity === 'medium' ? '#f59e0b' : '#3b82f6')
                             }}
                         >
-                            <Popup className="custom-popup">
-                                <div className="p-1 min-w-[150px]">
-                                    <span className="font-bold text-slate-800 text-sm block mb-1">{data.label}</span>
-                                    <div className="flex gap-2 text-xs text-slate-500">
-                                        <span className="bg-slate-100 px-1 rounded">{data.type === 'citizen' ? '시민' : '전문가'}</span>
-                                        <span className="bg-slate-100 px-1 rounded uppercase">{data.category}</span>
+                            {/* Improved Rich Popup with explicit Pane */}
+                            <Popup className="custom-popup" offset={[0, -10]} closeButton={false} pane="custom-popup-pane">
+                                <div className="min-w-[240px] max-w-[280px] overflow-hidden rounded-lg font-sans">
+                                    {/* Image Section */}
+                                    <div className="h-32 w-full relative bg-slate-100">
+                                        <img src={data.image} alt="현장 사진" className="w-full h-full object-cover" loading="lazy" />
+                                        <div className="absolute top-2 left-2">
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold text-white shadow-sm uppercase tracking-wide ${data.severity === 'high' ? 'bg-red-500' : (data.severity === 'medium' ? 'bg-orange-500' : 'bg-blue-500')
+                                                }`}>
+                                                {data.severity === 'high' ? '위험' : (data.severity === 'medium' ? '주의' : '양호')}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Content Section */}
+                                    <div className="p-4 bg-white">
+                                        <h4 className="font-bold text-slate-900 text-sm mb-1 leading-snug">{data.label}</h4>
+                                        <p className="text-[11px] text-slate-500 mb-3">{data.category.toUpperCase()} 이슈</p>
+
+                                        <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-lg border border-slate-100 ring-2 ring-white shadow-sm">
+                                                    {data.type === 'expert' ? '🤖' : '🧑'}
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-bold text-slate-800">{data.proposer}</span>
+                                                    <span className="text-[10px] text-slate-400">{data.proposerRole}</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-[10px] text-slate-400">등록일</span>
+                                                <span className="text-[10px] text-slate-600 font-medium">{data.date}</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </Popup>
@@ -363,23 +386,23 @@ const MapCanvas = memo(({ selectedCategories = [], userType = 'all', theme = 'li
             </MapContainer>
 
             {/* Legend Overlay */}
-            <div className="absolute bottom-4 right-4 bg-white/90 dark:bg-slate-800/90 backdrop-blur border border-slate-300 dark:border-slate-600 p-3 rounded-lg z-[500] shadow-xl transition-colors duration-300">
+            <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur border border-slate-300 p-3 rounded-lg z-[500] shadow-xl transition-colors duration-300">
                 <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200 border-b dark:border-slate-600 pb-1 mb-1">
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-700 border-b border-slate-200 pb-1 mb-1">
                         <span>지역 위험도 (히트맵)</span>
                     </div>
-                    {selectedDistrict && selectedDistrict !== 'all' && (
+                    {selectedDistricts && selectedDistricts.length > 0 && (
                         <div className="flex items-center gap-2 text-xs text-rose-500 font-medium mb-1">
-                            <span>* 상세 행정구역 분석 모드</span>
+                            <span>* 선정 지역 상세 분석 중</span>
                         </div>
                     )}
-                    <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                    <div className="flex items-center gap-2 text-xs text-slate-600">
                         <div className="w-4 h-4 rounded bg-red-500 opacity-60"></div><span>위험 (다수 신고)</span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                    <div className="flex items-center gap-2 text-xs text-slate-600">
                         <div className="w-4 h-4 rounded bg-orange-500 opacity-60"></div><span>주의</span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                    <div className="flex items-center gap-2 text-xs text-slate-600">
                         <div className="w-4 h-4 rounded bg-green-500 opacity-60"></div><span>양호</span>
                     </div>
                 </div>
