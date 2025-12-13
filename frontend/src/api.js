@@ -26,9 +26,50 @@ api.interceptors.request.use(
     }
 );
 
+// Dashboard Data APIs
+export const fetchDashboardData = async (year, district) => {
+    try {
+        const response = await api.get('/api/dashboard/analysis', { params: { year, district } });
+        return response.data;
+    } catch (error) {
+        console.error("Dashboard Data Failed:", error);
+        return [];
+    }
+};
+
+export const fetchScore = async (year, district) => {
+    try {
+        const response = await api.get('/api/dashboard/score', { params: { year, district } });
+        return response.data;
+    } catch (error) {
+        console.error("Score Failed:", error);
+        return { score: 0, grade: '-', trend: '-' };
+    }
+};
+
+export const fetchInsights = async (year, district) => {
+    try {
+        const response = await api.get('/api/dashboard/insights', { params: { year, district } });
+        return response.data;
+    } catch (error) {
+        console.error("Insights Failed:", error);
+        return [];
+    }
+};
+
+export const fetchPersonas = async (year, district) => {
+    try {
+        const response = await api.get('/api/dashboard/personas', { params: { year, district } });
+        return response.data;
+    } catch (error) {
+        console.error("Personas Failed:", error);
+        return [];
+    }
+};
+
 export const fetchAIAnalysis = async (year, district, dataSummary) => {
     try {
-        const response = await api.post('/api/ai/analyze', {
+        const response = await api.post('/ai/analyze', {
             year,
             district,
             data_summary: dataSummary
@@ -42,7 +83,7 @@ export const fetchAIAnalysis = async (year, district, dataSummary) => {
 
 export const sendAIChat = async (message, history, context) => {
     try {
-        const response = await api.post('/api/ai/chat', { message, history, context });
+        const response = await api.post('/ai/chat', { message, history, context });
         if (response.data && response.data.response) {
             return { response: response.data.response };
         }

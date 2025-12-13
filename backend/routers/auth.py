@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from .. import models, database, utils
+import models, database, utils
 from pydantic import BaseModel
 from datetime import timedelta
 

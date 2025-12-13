@@ -22,8 +22,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from . import models, database
-from .routers import auth, dashboard, ai
+import models, database
+from routers import auth, dashboard, ai
 
 @app.on_event("startup")
 def startup_event():

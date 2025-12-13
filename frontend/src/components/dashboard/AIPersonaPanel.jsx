@@ -48,7 +48,7 @@ export default function AIPersonaPanel({ personas = [], onSelectPersona, onChatC
                         {/* Profile Header */}
                         <div className="flex items-start gap-3">
                             <div className="w-12 h-12 rounded-full bg-white border border-slate-200 flex items-center justify-center text-3xl shadow-sm group-hover:scale-105 transition-transform">
-                                {persona.avatar}
+                                {persona.image_emoji}
                             </div>
                             <div className="flex-1 min-w-0 pr-6">
                                 <div className="flex items-end gap-2 mb-1">
@@ -56,7 +56,7 @@ export default function AIPersonaPanel({ personas = [], onSelectPersona, onChatC
                                     <span className="text-xs text-slate-500 mb-0.5">{persona.age}세</span>
                                 </div>
                                 <div className="flex flex-wrap gap-1">
-                                    {persona.tags.slice(0, 2).map((tag, idx) => (
+                                    {persona.tags && persona.tags.slice(0, 2).map((tag, idx) => (
                                         <span key={idx} className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px] text-slate-500">
                                             {tag}
                                         </span>
@@ -75,7 +75,7 @@ export default function AIPersonaPanel({ personas = [], onSelectPersona, onChatC
                         {/* Comment Bubble */}
                         <div className="relative bg-white p-3 rounded-lg border border-slate-200 text-sm text-slate-700 leading-snug group-hover:text-slate-900 group-hover:bg-slate-50 transition-colors">
                             <div className="absolute -top-1.5 left-5 w-3 h-3 bg-white border-t border-l border-slate-200 transform rotate-45 group-hover:bg-slate-50"></div>
-                            {persona.shortComment}
+                            {persona.quote}
                         </div>
                     </div>
                 ))}

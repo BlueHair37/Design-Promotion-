@@ -1,6 +1,0 @@
-Found candidate: Jung (??| ??) | Parent: Seoul (None) | GID: None
-Found candidate: Jungnang (???| ???) | Parent: Seoul (None) | GID: None
-Found candidate: Jung (??| ??) | Parent: Ulsan (None) | GID: None
-Found candidate: Jung (??| ??) | Parent: Daegu (None) | GID: None
-Found candidate: Jung (??| ??) | Parent: Daejeon (None) | GID: None
-Found candidate: Jung (??| ??) | Parent: Incheon (None) | GID: None

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Dict, Any, List
-from ..ai_service import ai_service
+from ai_service import ai_service
 
 router = APIRouter(prefix="/api/ai", tags=["AI Analysis"])
 
@@ -9,6 +9,11 @@ class AnalysisRequest(BaseModel):
     year: str
     district: str
     data_summary: Dict[str, Any]
+
+class ChatRequest(BaseModel):
+    message: str
+    history: List[Dict[str, str]]
+    context: Dict[str, Any]
 
 @router.post("/analyze")
 async def analyze_data(request: AnalysisRequest):
@@ -23,4 +28,17 @@ async def analyze_data(request: AnalysisRequest):
         )
         return {"analysis": result}
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/chat")
+async def chat(request: ChatRequest):
+    try:
+        response = await ai_service.chat_with_context(
+            message=request.message,
+            history=request.history,
+            context=request.context
+        )
+        return {"response": response}
+    except Exception as e:
+        print(f"Chat Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))

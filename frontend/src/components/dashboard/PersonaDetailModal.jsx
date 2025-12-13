@@ -6,15 +6,15 @@ export default function PersonaDetailModal({ persona, onClose }) {
 
     // Chart Data
     const pieData = [
-        { name: '제안', value: persona.stats.suggestion, color: '#6366f1' }, // Indigo
-        { name: '제보', value: persona.stats.report, color: '#f43f5e' },     // Rose
-        { name: '진단', value: persona.stats.diagnosis, color: '#64748b' },  // Slate
+        { name: '제안', value: persona.stats?.suggestion || 0, color: '#6366f1' }, // Indigo
+        { name: '제보', value: persona.stats?.report || 0, color: '#f43f5e' },     // Rose
+        { name: '진단', value: persona.stats?.diagnosis || 0, color: '#64748b' },  // Slate
     ];
 
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 backdrop-blur-sm p-4 animate-in fade-in duration-200">
             {/* Modal Card */}
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl h-[85vh] flex overflow-hidden relative animate-in zoom-in-95 duration-200">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-7xl h-[85vh] flex overflow-hidden relative animate-in zoom-in-95 duration-200">
 
                 {/* Close Button */}
                 <button
@@ -29,14 +29,14 @@ export default function PersonaDetailModal({ persona, onClose }) {
                     {/* Header Info */}
                     <div className="flex flex-col items-center text-center mb-8">
                         <div className="w-32 h-32 rounded-full bg-white border-4 border-white shadow-lg flex items-center justify-center text-8xl mb-4 relative">
-                            {persona.avatar}
+                            {persona.image_emoji}
                             <div className="absolute bottom-0 right-0 bg-primary text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
-                                {persona.address.split(' ')[0]}
+                                {persona.district_code}
                             </div>
                         </div>
                         <h2 className="text-3xl font-black text-slate-800 mb-1">{persona.name} <span className="text-xl font-normal text-slate-500">{persona.age}세</span></h2>
                         <div className="flex items-center gap-1 text-slate-500 text-sm mb-4">
-                            <MapPin className="w-4 h-4" /> {persona.address}
+                            <MapPin className="w-4 h-4" /> {persona.district_code}
                         </div>
                         <div className="flex flex-wrap gap-2 justify-center">
                             {persona.tags.map((tag, idx) => (
@@ -75,7 +75,7 @@ export default function PersonaDetailModal({ persona, onClose }) {
                             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                                 <span className="text-xs text-slate-400">총 참여</span>
                                 <span className="text-2xl font-bold text-slate-800">
-                                    {(persona.stats.suggestion + persona.stats.report + persona.stats.diagnosis).toLocaleString()}
+                                    {((persona.stats?.suggestion || 0) + (persona.stats?.report || 0) + (persona.stats?.diagnosis || 0)).toLocaleString()}
                                 </span>
                             </div>
                         </div>
@@ -97,11 +97,15 @@ export default function PersonaDetailModal({ persona, onClose }) {
                         </div>
                         <div className="flex justify-between border-b border-slate-200 pb-2">
                             <span className="text-slate-500 font-medium">관심사</span>
-                            <span className="text-slate-800 text-right max-w-[60%]">{persona.hobbies}</span>
+                            <span className="text-slate-800 text-right max-w-[60%]">
+                                {persona.tags && persona.tags.map(t => t.replace('#', '')).join(', ')}
+                            </span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-slate-500 font-medium">주요 고민</span>
-                            <span className="text-slate-800 text-right max-w-[60%] font-bold text-rose-500">{persona.concern}</span>
+                            <span className="text-slate-800 text-right max-w-[60%] font-bold text-rose-500">
+                                {persona.pain_points && persona.pain_points[0]}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -112,7 +116,7 @@ export default function PersonaDetailModal({ persona, onClose }) {
                     <div className="relative p-8 bg-slate-50 rounded-b-3xl rounded-tr-3xl">
                         <Quote className="absolute top-6 left-6 w-10 h-10 text-slate-200" />
                         <p className="relative z-10 text-2xl font-bold text-slate-800 leading-relaxed word-keep-all pl-10">
-                            {persona.fullQuote}
+                            {persona.full_quote}
                         </p>
                     </div>
 
@@ -125,7 +129,7 @@ export default function PersonaDetailModal({ persona, onClose }) {
                                 여기는 좀 고쳐주세요 (Pain Points)
                             </h3>
                             <ul className="space-y-3">
-                                {persona.painPoints.map((point, idx) => (
+                                {persona.pain_points && persona.pain_points.map((point, idx) => (
                                     <li key={idx} className="flex items-start gap-3 bg-red-50 p-3 rounded-lg border border-red-100">
                                         <div className="w-6 h-6 rounded-full bg-white text-rose-500 font-bold flex items-center justify-center shrink-0 shadow-sm border border-red-100">
                                             {idx + 1}
@@ -143,7 +147,7 @@ export default function PersonaDetailModal({ persona, onClose }) {
                                 이렇게 바뀌면 좋겠어요 (Needs)
                             </h3>
                             <ul className="space-y-3">
-                                {persona.suggestions.map((point, idx) => (
+                                {persona.suggestions && persona.suggestions.map((point, idx) => (
                                     <li key={idx} className="flex items-start gap-3 bg-blue-50 p-3 rounded-lg border border-blue-100">
                                         <div className="w-6 h-6 rounded-full bg-white text-blue-500 font-bold flex items-center justify-center shrink-0 shadow-sm border border-blue-100">
                                             {idx + 1}
@@ -165,7 +169,7 @@ export default function PersonaDetailModal({ persona, onClose }) {
                         </h3>
 
                         <div className="relative z-10 grid grid-cols-2 gap-6">
-                            {persona.expectedEffects.map((effect, idx) => (
+                            {persona.expected_effects && persona.expected_effects.map((effect, idx) => (
                                 <div key={idx} className="flex items-center gap-4 bg-white/10 p-4 rounded-xl border border-white/10 backdrop-blur-sm">
                                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-rose-400 flex items-center justify-center shrink-0 shadow-lg font-bold text-lg">
                                         👍

@@ -5,153 +5,118 @@ import { LogOut, User, Loader2 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 // Lazy load MapCanvas
 const MapCanvas = lazy(() => import('../components/dashboard/MapCanvas'));
-import FilterPanel from '../components/dashboard/FilterPanel';
 import AnalysisChart from '../components/dashboard/AnalysisChart';
 import AIPersonaPanel from '../components/dashboard/AIPersonaPanel';
 import ScoreGauge from '../components/dashboard/ScoreGauge';
 import FloatingChatWidget from '../components/dashboard/FloatingChatWidget';
 import PersonaDetailModal from '../components/dashboard/PersonaDetailModal';
 import { DISTRICTS } from '../data/constants';
-import { fetchAnalysisData, fetchScore, fetchInsights, fetchPersonas } from '../data/mockDashboardData';
+import { fetchDashboardData as fetchAnalysisData, fetchScore, fetchInsights, fetchPersonas } from '../api';
 
 export default function Dashboard() {
     const [selectedCategories, setSelectedCategories] = useState([]);
     const [userType, setUserType] = useState('all');
     const [username, setUsername] = useState('User');
-    // const [theme, setTheme] = useState('light'); // Removed Dark Mode
-    const [selectedDistricts, setSelectedDistricts] = useState([]); // Array for multi-select
+    const [selectedDistricts, setSelectedDistricts] = useState([]);
     const [selectedYear, setSelectedYear] = useState('2026');
-    const [facilityTypes, setFacilityTypes] = useState([]); // Array for multi-select
-    const [diagnosticianClasses, setDiagnosticianClasses] = useState([]); // Array for multi-select
+    const [selectedFacilityTypes, setSelectedFacilityTypes] = useState([]);
+    const [selectedDiagnosticianClasses, setSelectedDiagnosticianClasses] = useState([]);
 
-    // New State for Persona Modal & Chat
+    // State for dashboard data
+    const [dashboardData, setDashboardData] = useState({
+        analysis: [],
+        score: { value: 0, grade: '-', trend: '-' },
+        personas: [],
+        insights: []
+    });
+
     const [selectedPersona, setSelectedPersona] = useState(null);
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [activeChatPersona, setActiveChatPersona] = useState(null);
 
     const navigate = useNavigate();
 
-    // Handlers
-    const handleChatWithPersona = useCallback((persona) => {
-        setActiveChatPersona(persona);
-        setIsChatOpen(true);
-    }, []);
-
-    const toggleChat = useCallback(() => {
-        setIsChatOpen(prev => {
-            if (!prev) setActiveChatPersona(null); // Reset to Assistant when opening via FAB
-            return !prev;
-        });
-    }, []);
-
-    // Load username
+    // Load Initial Data (Mock)
     useEffect(() => {
-        const storedName = localStorage.getItem('username');
-        if (storedName) {
-            setUsername(storedName);
+        // Fetch User Info
+        const storedUser = localStorage.getItem('user_info');
+        if (storedUser) {
+            setUsername(JSON.parse(storedUser).username);
         }
     }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('access_token');
-        localStorage.removeItem('username');
+        localStorage.removeItem('user_info');
         navigate('/login');
     };
 
-    // Toggle Category Selection
-    const toggleCategory = useCallback((categoryId) => {
-        setSelectedCategories(prev => {
-            if (prev.includes(categoryId)) {
-                return prev.filter(id => id !== categoryId);
-            }
-            return [...prev, categoryId];
-        });
-    }, []);
-
-    const resetFilters = useCallback(() => {
-        setSelectedCategories([]);
-        setUserType('all');
-        setSelectedDistricts([]);
-        setSelectedYear('2026');
-        setFacilityTypes([]);
-        setDiagnosticianClasses([]);
-    }, []);
-
-    // Dashboard Data State
-    const [dashboardData, setDashboardData] = useState({
-        analysis: [],
-        score: { value: 0, grade: '-', trend: '-' },
-        insights: [],
-        personas: []
-    });
-
-    const [aiAnalysis, setAiAnalysis] = useState(null);
-    const [isAiLoading, setIsAiLoading] = useState(false);
-
-    // Fetch Data on Filter Change
+    // Fetch Data from Backend API
     useEffect(() => {
-        // Pass arrays to data fetchers (will need to update mock data functions to handle arrays)
-        const analysis = fetchAnalysisData(selectedYear, selectedDistricts);
-        const score = fetchScore(selectedYear, selectedDistricts);
-        const insights = fetchInsights(selectedYear, selectedDistricts);
-        const personas = fetchPersonas(selectedYear, selectedDistricts);
+        const loadData = async () => {
+            const [analysis, score, insights, personas] = await Promise.all([
+                fetchAnalysisData(selectedYear, selectedDistricts.join(',')),
+                fetchScore(selectedYear, selectedDistricts.join(',')),
+                fetchInsights(selectedYear, selectedDistricts.join(',')),
+                fetchPersonas(selectedYear, selectedDistricts.join(','))
+            ]);
 
-        setDashboardData({
-            analysis,
-            score,
-            insights,
-            personas
-        });
-
-        // AI Analysis Fetching
-        const loadAIAnalysis = async () => {
-            // ... existing logic ...
-            if (selectedDistricts.length === 0) { }
-
-            setIsAiLoading(true);
-            try {
-                // Pass summary data for context
-                const summaryContext = {
-                    score: score.value,
-                    grade: score.grade,
-                    analysis: analysis.map(a => `${a.category}: ${a.value}`)
-                };
-            } catch (error) {
-                console.error("Failed to fetch AI analysis", error);
-            } finally {
-                setIsAiLoading(false);
-            }
+            setDashboardData({
+                analysis,
+                score,
+                insights,
+                personas
+            });
         };
-        // Debounce
-    }, [selectedYear, selectedDistricts, userType, facilityTypes, diagnosticianClasses]);
+
+        loadData();
+    }, [selectedYear, selectedDistricts]);
+
+
+    const handleChatWithPersona = (persona) => {
+        setActiveChatPersona(persona);
+        setIsChatOpen(true);
+    };
+
+    const toggleChat = () => {
+        setIsChatOpen(!isChatOpen);
+        if (isChatOpen) setActiveChatPersona(null);
+    };
 
     return (
         <div className="flex h-screen bg-bg-main overflow-hidden font-sans text-slate-800">
-            {/* Sidebar with New Filter Props */}
             <Sidebar
                 selectedCategories={selectedCategories}
-                onSelectCategory={toggleCategory}
-                onResetFilters={resetFilters}
+                onSelectCategory={(id) => {
+                    setSelectedCategories(prev =>
+                        prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
+                    );
+                }}
+                onResetFilters={() => {
+                    setSelectedCategories([]);
+                    setSelectedDistricts([]);
+                    setSelectedFacilityTypes([]);
+                    setSelectedDiagnosticianClasses([]);
+                    setSelectedYear('2026');
+                }}
                 userType={userType}
                 onSelectUserType={setUserType}
                 selectedDistricts={selectedDistricts}
                 onSelectDistricts={setSelectedDistricts}
                 selectedYear={selectedYear}
                 onSelectYear={setSelectedYear}
-                facilityTypes={facilityTypes}
-                onSelectFacilityTypes={setFacilityTypes}
-                diagnosticianClasses={diagnosticianClasses}
-                onSelectDiagnosticianClasses={setDiagnosticianClasses}
+                facilityTypes={selectedFacilityTypes}
+                onSelectFacilityTypes={setSelectedFacilityTypes}
+                diagnosticianClasses={selectedDiagnosticianClasses}
+                onSelectDiagnosticianClasses={setSelectedDiagnosticianClasses}
             />
 
-            {/* Main Content Area */}
             <main className="flex-1 flex flex-col min-w-0 relative">
-
                 {/* Top Header Area */}
                 <header className="h-16 bg-white border-b border-border flex items-center justify-between px-6 shadow-sm z-10 shrink-0">
                     <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                         <span className="text-primary">부산시</span> 지능형 공공디자인 통합 진단 플랫폼
-                        <span className="text-sm font-normal text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">(2026년 성과 전망)</span>
+                        <span className="text-sm font-normal text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">({selectedYear}년 성과 전망)</span>
                     </h1>
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full">
@@ -199,7 +164,7 @@ export default function Dashboard() {
 
                     {/* Right Panel (Side Widgets: Score + Personas) */}
                     <div className="col-span-12 lg:col-span-4 flex flex-col gap-6 h-full overflow-y-auto custom-scrollbar pr-1">
-                        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+                        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 h-52">
                             <ScoreGauge score={dashboardData.score} />
                         </div>
 
@@ -228,8 +193,8 @@ export default function Dashboard() {
                     context={{
                         district: selectedDistricts.length > 0 ? selectedDistricts.join(', ') : '부산시 전체',
                         year: selectedYear,
-                        score: dashboardData.score,
-                        grade: dashboardData.score >= 80 ? 'A' : dashboardData.score >= 70 ? 'B' : 'C'
+                        score: dashboardData.score?.score || 0,
+                        grade: dashboardData.score?.grade || 'N/A'
                     }}
                 />
             </main>

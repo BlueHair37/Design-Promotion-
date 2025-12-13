@@ -16,7 +16,7 @@ export default function FloatingChatWidget({ context, isOpen, onToggle, targetPe
                         <div className="flex items-center gap-2">
                             {targetPersona ? (
                                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-lg shadow-sm backdrop-blur-sm border border-white/30">
-                                    {targetPersona.avatar}
+                                    {targetPersona.image_emoji}
                                 </div>
                             ) : (
                                 <Bot className="w-5 h-5 text-primary" />
@@ -25,7 +25,7 @@ export default function FloatingChatWidget({ context, isOpen, onToggle, targetPe
                                 <h3 className="font-bold text-sm">
                                     {targetPersona ? `${targetPersona.name}님과의 대화` : 'AI 안전 도우미'}
                                 </h3>
-                                {targetPersona && <p className="text-[10px] text-white/80">{targetPersona.address} / {targetPersona.age}세</p>}
+                                {targetPersona && <p className="text-[10px] text-white/80">{targetPersona.district_code} / {targetPersona.age}세</p>}
                             </div>
                         </div>
                         <button

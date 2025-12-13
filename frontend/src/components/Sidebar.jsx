@@ -1,24 +1,12 @@
 import { Home, Leaf, Car, Shield, GraduationCap, Factory, Palette, Heart, RotateCcw } from 'lucide-react';
 import MultiSelectDropdown from './common/MultiSelectDropdown';
 
-const DISTRICT_OPTIONS = [
-    { value: '21090', label: '해운대구' },
-    { value: '21050', label: '부산진구' },
-    { value: '21100', label: '사하구' },
-    { value: '21010', label: '중구' },
-    { value: '21020', label: '서구' },
-    { value: '21030', label: '동구' },
-    { value: '21040', label: '영도구' },
-    { value: '21060', label: '동래구' },
-    { value: '21070', label: '남구' },
-    { value: '21080', label: '북구' },
-    { value: '21110', label: '금정구' },
-    { value: '21120', label: '강서구' },
-    { value: '21130', label: '연제구' },
-    { value: '21140', label: '수영구' },
-    { value: '21150', label: '사상구' },
-    { value: '21310', label: '기장군' }
-];
+import { DISTRICTS } from '../data/constants';
+
+const DISTRICT_OPTIONS = DISTRICTS.filter(d => d.id !== 'all').map(d => ({
+    value: d.id,
+    label: d.name
+}));
 
 const FACILITY_OPTIONS = [
     { value: 'public', label: '공공건축물' },
@@ -64,10 +52,7 @@ export default function Sidebar({
         <aside className="w-72 bg-white border-r border-border h-full flex flex-col z-20 shadow-sm transition-all duration-300 font-sans">
             <div className="h-16 flex items-center px-6 border-b border-border bg-white shrink-0">
                 <div className="flex flex-col">
-                    <span className="text-2xl font-black text-slate-900 tracking-tighter leading-none">
-                        Kode<span className="text-primary italic">Korea</span>
-                    </span>
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Busan Design Platform</span>
+                    <img src="/busan_is_good.png" alt="Busan is Good" className="h-10 w-auto object-contain" />
                 </div>
             </div>
 
