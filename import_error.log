@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "C:\Users\kang\Desktop\디자인진흥원 v1\backend\import_real_data.py", line 89, in import_data
+    district_code = correct_district_by_coords(raw_code, row['위도'], row['경도'])
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'correct_district_by_coords' where it is not associated with a value
+
+Error importing data: cannot access local variable 'correct_district_by_coords' where it is not associated with a value

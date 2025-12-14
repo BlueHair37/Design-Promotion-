@@ -10,6 +10,7 @@ import AIPersonaPanel from '../components/dashboard/AIPersonaPanel';
 import ScoreGauge from '../components/dashboard/ScoreGauge';
 import FloatingChatWidget from '../components/dashboard/FloatingChatWidget';
 import PersonaDetailModal from '../components/dashboard/PersonaDetailModal';
+const InsightDetailModal = lazy(() => import('../components/dashboard/InsightDetailModal'));
 import { DISTRICTS } from '../data/constants';
 import { fetchDashboardData as fetchAnalysisData, fetchScore, fetchInsights, fetchPersonas } from '../api';
 
@@ -31,6 +32,7 @@ export default function Dashboard() {
     });
 
     const [selectedPersona, setSelectedPersona] = useState(null);
+    const [selectedInsight, setSelectedInsight] = useState(null);
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [activeChatPersona, setActiveChatPersona] = useState(null);
 
@@ -154,6 +156,7 @@ export default function Dashboard() {
                                     selectedDistricts={selectedDistricts}
                                     insights={dashboardData.insights}
                                     analysisData={dashboardData.analysis}
+                                    onViewDetail={setSelectedInsight}
                                 />
                             </Suspense>
                             {/* Decorative border on hover/active could act as 'focus' */}
@@ -183,11 +186,21 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* Modal Overlay */}
+                {/* Modal Overlay for Persona */}
                 <PersonaDetailModal
                     persona={selectedPersona}
                     onClose={() => setSelectedPersona(null)}
                 />
+
+                {/* Insight Detail Modal */}
+                <Suspense fallback={null}>
+                    {selectedInsight && (
+                        <InsightDetailModal
+                            insight={selectedInsight}
+                            onClose={() => setSelectedInsight(null)}
+                        />
+                    )}
+                </Suspense>
 
                 {/* Floating Chat Widget */}
                 <FloatingChatWidget

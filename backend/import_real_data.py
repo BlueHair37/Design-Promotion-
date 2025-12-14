@@ -38,8 +38,44 @@ def import_data():
 
         df_public = pd.read_excel(public_path)
         print(f"Loaded {len(df_public)} rows from {FILE_PUBLIC}")
+
+        # Complete List of Busan Districts
+        BUSAN_DISTRICTS = [
+            {"id": "21010", "name": "중구"}, {"id": "21020", "name": "서구"}, {"id": "21030", "name": "동구"},
+            {"id": "21040", "name": "영도구"}, {"id": "21050", "name": "부산진구"}, {"id": "21060", "name": "동래구"},
+            {"id": "21070", "name": "남구"}, {"id": "21080", "name": "북구"}, {"id": "21090", "name": "해운대구"},
+            {"id": "21100", "name": "사하구"}, {"id": "21110", "name": "금정구"}, {"id": "21120", "name": "강서구"},
+            {"id": "21130", "name": "연제구"}, {"id": "21140", "name": "수영구"}, {"id": "21150", "name": "사상구"},
+            {"id": "21310", "name": "기장군"}
+        ]
         
-        # Process Personas (Group by ID or create generic ones if IDs are reused generically)
+        # Mapping from common names/places to District ID
+        DISTRICT_MAPPING = {d['name']: d['id'] for d in BUSAN_DISTRICTS}
+        DISTRICT_MAPPING.update({
+            "부산역": "21030", "초량": "21030",
+            "서면": "21050", "전포": "21050", "부전": "21050",
+            "광안리": "21140", "수영": "21140",
+            "해운대": "21090", "센텀": "21090",
+            "자갈치": "21010", "남포": "21010",
+            "사상": "21150", "덕천": "21080"
+        })
+
+        def get_district_code(raw_name):
+            if pd.isna(raw_name): return "21050" 
+            s = str(raw_name).strip()
+            if s in DISTRICT_MAPPING: return DISTRICT_MAPPING[s]
+            for name, code in DISTRICT_MAPPING.items():
+                if name in s: return code
+            return "21050" 
+
+        def correct_district_by_coords(code, lat, lng):
+            if pd.isna(lat) or pd.isna(lng): return code
+            # If mapped to Dong-gu (21030) but Lat > 35.155 (Deep in Seomyeon), move to Busanjin-gu
+            # Beomil is around 35.14~35.15, keeping it in Dong-gu (21030) if possible
+            if code == '21030' and lat > 35.155:
+                return '21050'
+            return code
+
         # ID example: 'NYJ76300'
         # We need distinct list of users to create Personas
         print("Processing Personas...")
@@ -48,13 +84,18 @@ def import_data():
         users = df_public.groupby('ID').agg({
             '진단지역': 'first',
             '리뷰': lambda x: list(x.dropna()),
-            '점수': 'mean'
+            '점수': 'mean',
+            '위도': 'mean',
+            '경도': 'mean'
         }).reset_index()
 
         personas = []
         for idx, row in users.iterrows():
             # Generate Persona Attributes
-            district_code = row['진단지역'] # Using Raw Location Name as Code
+            raw_code = get_district_code(row['진단지역'])
+            # Apply Spatial Correction
+            district_code = correct_district_by_coords(raw_code, row['위도'], row['경도'])
+            
             avg_score = row['점수']
             pain_points = row['리뷰'][:5] # Top 5 reviews
             
@@ -83,11 +124,56 @@ def import_data():
         
         print(f"Created {len(users)} personas.")
 
+        # Complete List of Busan Districts
+        BUSAN_DISTRICTS = [
+            {"id": "21010", "name": "중구"}, {"id": "21020", "name": "서구"}, {"id": "21030", "name": "동구"},
+            {"id": "21040", "name": "영도구"}, {"id": "21050", "name": "부산진구"}, {"id": "21060", "name": "동래구"},
+            {"id": "21070", "name": "남구"}, {"id": "21080", "name": "북구"}, {"id": "21090", "name": "해운대구"},
+            {"id": "21100", "name": "사하구"}, {"id": "21110", "name": "금정구"}, {"id": "21120", "name": "강서구"},
+            {"id": "21130", "name": "연제구"}, {"id": "21140", "name": "수영구"}, {"id": "21150", "name": "사상구"},
+            {"id": "21310", "name": "기장군"}
+        ]
+        
+        # Mapping from common names/places to District ID
+        DISTRICT_MAPPING = {d['name']: d['id'] for d in BUSAN_DISTRICTS}
+        # Add special cases found in data
+        DISTRICT_MAPPING.update({
+            "부산역": "21030", # Dong-gu
+            "초량": "21030",
+            "서면": "21050", # Busanjin-gu
+            "전포": "21050",
+            "부전": "21050",
+            "광안리": "21140", # Suyeong-gu
+            "해운대": "21090", # Haeundae-gu
+            "센텀": "21090",
+            "자갈치": "21010", # Jung-gu
+            "남포": "21010",
+            "사상": "21150", # Sasang-gu
+            "덕천": "21080", # Buk-gu
+        })
+
+        def get_district_code(raw_name):
+            if pd.isna(raw_name): return "21050" # Default?
+            s = str(raw_name).strip()
+            # Direct match
+            if s in DISTRICT_MAPPING: return DISTRICT_MAPPING[s]
+            # Partial match (e.g. "부산진구 부전동")
+            for name, code in DISTRICT_MAPPING.items():
+                if name in s:
+                    return code
+            return "21050" # Default to Busanjin-gu (Center) or known valid if unknown
+
+        def correct_district_by_coords(code, lat, lng):
+            # If mapped to Dong-gu (21030) but Lat > 35.14, it's likely Busanjin-gu (Seomyeon)
+            # Busan Station: ~35.115, Seomyeon: ~35.157
+            if code == '21030' and lat > 35.14:
+                return '21050'
+            # Add more spatial rules if needed
+            return code
+
         # Helper function to process insights from dataframe
         def process_insights(df, source_type):
             count = 0
-            if '이미지경로' in df.columns:
-                 pass
             
             for idx, row in df.iterrows():
                 # Skip if no coordinates
@@ -105,8 +191,14 @@ def import_data():
                     if "부적합" in score_val:
                         is_high_severity = True
                 
+                # Correctly map the district code
+                raw_district = row['진단지역']
+                mapped_code = get_district_code(raw_district)
+                # Apply Spatial Correction
+                final_code = correct_district_by_coords(mapped_code, float(row['위도']), float(row['경도']))
+
                 insight = models.DistrictInsight(
-                    district_code=str(row['진단지역']),
+                    district_code=final_code,
                     year="2026", # Target Year
                     type='issue', # Default
                     title=f"{row['대분류']} - {row['중분류']} 문제",
@@ -139,16 +231,6 @@ def import_data():
             print(f"Created {expert_count} expert insights.")
         else:
             print(f"Expert file not found: {expert_path}")
-
-        # Complete List of Busan Districts
-        BUSAN_DISTRICTS = [
-            {"id": "21010", "name": "중구"}, {"id": "21020", "name": "서구"}, {"id": "21030", "name": "동구"},
-            {"id": "21040", "name": "영도구"}, {"id": "21050", "name": "부산진구"}, {"id": "21060", "name": "동래구"},
-            {"id": "21070", "name": "남구"}, {"id": "21080", "name": "북구"}, {"id": "21090", "name": "해운대구"},
-            {"id": "21100", "name": "사하구"}, {"id": "21110", "name": "금정구"}, {"id": "21120", "name": "강서구"},
-            {"id": "21130", "name": "연제구"}, {"id": "21140", "name": "수영구"}, {"id": "21150", "name": "사상구"},
-            {"id": "21310", "name": "기장군"}
-        ]
 
         analysis_data = {}
         # Real data processing (as before)
