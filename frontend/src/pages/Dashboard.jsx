@@ -54,11 +54,13 @@ export default function Dashboard() {
     // Fetch Data from Backend API
     useEffect(() => {
         const loadData = async () => {
+            const districtParam = selectedDistricts.length > 0 ? selectedDistricts.join(',') : 'all';
+
             const [analysis, score, insights, personas] = await Promise.all([
-                fetchAnalysisData(selectedYear, selectedDistricts.join(',')),
-                fetchScore(selectedYear, selectedDistricts.join(',')),
-                fetchInsights(selectedYear, selectedDistricts.join(',')),
-                fetchPersonas(selectedYear, selectedDistricts.join(','))
+                fetchAnalysisData(selectedYear, districtParam),
+                fetchScore(selectedYear, districtParam),
+                fetchInsights(selectedYear, districtParam),
+                fetchPersonas(selectedYear, districtParam)
             ]);
 
             setDashboardData({
@@ -150,6 +152,8 @@ export default function Dashboard() {
                                     userType={userType}
                                     theme="light"
                                     selectedDistricts={selectedDistricts}
+                                    insights={dashboardData.insights}
+                                    analysisData={dashboardData.analysis}
                                 />
                             </Suspense>
                             {/* Decorative border on hover/active could act as 'focus' */}
@@ -164,12 +168,12 @@ export default function Dashboard() {
 
                     {/* Right Panel (Side Widgets: Score + Personas) */}
                     <div className="col-span-12 lg:col-span-4 flex flex-col gap-6 h-full overflow-y-auto custom-scrollbar pr-1">
-                        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 h-52">
+                        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 h-64">
                             <ScoreGauge score={dashboardData.score} />
                         </div>
 
                         {/* Analysis Section Replaced with Persona Panel */}
-                        <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+                        <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden min-h-[400px]">
                             <AIPersonaPanel
                                 personas={dashboardData.personas}
                                 onSelectPersona={setSelectedPersona}

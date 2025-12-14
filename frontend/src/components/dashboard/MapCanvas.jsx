@@ -77,27 +77,11 @@ function ResetViewControl() {
 
 // Mock Data Points (Detailed Rich Data)
 // Adding images, proposers, dates for richer popups
-const allMockData = [
-    { id: 1, lat: 35.1578, lng: 129.0600, label: "서면 교차로 무단횡단 다발지역", type: "citizen", category: "transport", severity: "high", proposer: "김철수", proposerRole: "모범운전자", date: "2025.12.10", image: "https://picsum.photos/seed/1/300/200" },
-    { id: 2, lat: 35.1790, lng: 129.0750, label: "시청 인근 보도블럭 파손", type: "expert", category: "safety", severity: "medium", proposer: "AI 감지 시스템", proposerRole: "BDP-AI", date: "2025.12.11", image: "https://picsum.photos/seed/2/300/200" },
-    { id: 3, lat: 35.1000, lng: 128.9600, label: "쓰레기 무단 투기 집중 신고", type: "citizen", category: "environment", severity: "high", proposer: "박영자", proposerRole: "통장", date: "2025.12.09", image: "https://picsum.photos/seed/3/300/200" },
-    { id: 4, lat: 35.2100, lng: 129.0800, label: "동래구 쉼터 부족/벤치 파손", type: "expert", category: "culture", severity: "low", proposer: "이민수", proposerRole: "도시재생센터", date: "2025.12.05", image: "https://picsum.photos/seed/4/300/200" },
-    { id: 5, lat: 35.1600, lng: 129.1600, label: "해운대 해수욕장 소음 민원", type: "citizen", category: "environment", severity: "medium", proposer: "최지민", proposerRole: "대학생", date: "2025.12.08", image: "https://picsum.photos/seed/5/300/200" },
-    { id: 6, lat: 35.1900, lng: 129.1100, label: "연산 교차로 상습 정체 개선", type: "citizen", category: "transport", severity: "medium", proposer: "정우성", proposerRole: "택시기사", date: "2025.12.11", image: "https://picsum.photos/seed/6/300/200" },
-    { id: 7, lat: 35.1200, lng: 129.0400, label: "남항대교 진입로 강풍 위험", type: "expert", category: "safety", severity: "high", proposer: "AI 감지 시스템", proposerRole: "Weather-AI", date: "2025.12.12", image: "https://picsum.photos/seed/7/300/200" },
-    { id: 8, lat: 35.2300, lng: 129.0100, label: "금정산 등산로 미끄럼 사고", type: "expert", category: "environment", severity: "low", proposer: "산림청", proposerRole: "안전팀", date: "2025.12.01", image: "https://picsum.photos/seed/8/300/200" },
-    { id: 9, lat: 35.1500, lng: 129.1300, label: "광안리 해변 플라스틱 쓰레기", type: "citizen", category: "environment", severity: "high", proposer: "GreenBusan", proposerRole: "환경단체", date: "2025.12.07", image: "https://picsum.photos/seed/9/300/200" },
-    { id: 10, lat: 35.2500, lng: 129.2000, label: "기장군 해안도로 노면 파손", type: "expert", category: "safety", severity: "medium", proposer: "도로교통공단", proposerRole: "시설팀", date: "2025.12.10", image: "https://picsum.photos/seed/10/300/200" },
-    { id: 11, lat: 35.0800, lng: 129.0300, label: "영도구 흰여울길 난간 노후", type: "citizen", category: "safety", severity: "high", proposer: "강현우", proposerRole: "주민자치회", date: "2025.12.09", image: "https://picsum.photos/seed/11/300/200" },
-    { id: 12, lat: 35.1400, lng: 129.0000, label: "구덕터널 내부 환기 불량", type: "expert", category: "environment", severity: "medium", proposer: "환경공단", proposerRole: "대기질관리", date: "2025.12.11", image: "https://picsum.photos/seed/12/300/200" },
-    { id: 13, lat: 35.2000, lng: 129.0600, label: "사직구장 경기 시 소음/주차난", type: "citizen", category: "culture", severity: "low", proposer: "김민재", proposerRole: "야구팬", date: "2025.12.03", image: "https://picsum.photos/seed/13/300/200" },
-    { id: 14, lat: 35.1100, lng: 128.9800, label: "감천문화마을 급경사 미끄럼", type: "expert", category: "safety", severity: "high", proposer: "AI 감지 시스템", proposerRole: "Vision-AI", date: "2025.12.12", image: "https://picsum.photos/seed/14/300/200" },
-    { id: 15, lat: 35.1700, lng: 128.9500, label: "엄궁동 공장 지대 악취 신고", type: "citizen", category: "environment", severity: "high", proposer: "이수진", proposerRole: "부녀회장", date: "2025.12.10", image: "https://picsum.photos/seed/15/300/200" }
-];
+
 
 
 // MapCanvas Component
-const MapCanvas = memo(({ selectedCategories = [], userType = 'all', selectedDistricts = [] }) => {
+const MapCanvas = memo(({ selectedCategories = [], userType = 'all', selectedDistricts = [], insights = [], analysisData = [] }) => {
     const [geoJsonData, setGeoJsonData] = useState(null);
     const [hoveredDistrict, setHoveredDistrict] = useState(null);
     const [viewState, setViewState] = useState({ center: BUSAN_CENTER, zoom: 11 }); // eslint-disable-line no-unused-vars
@@ -118,29 +102,90 @@ const MapCanvas = memo(({ selectedCategories = [], userType = 'all', selectedDis
     }, []);
 
     // 구별 위험도(핑 개수) 모의 데이터
+    // Dynamic Severity Layout from Real Analysis Data
+    const districtScores = useMemo(() => {
+        if (!analysisData || analysisData.length === 0) return {};
+        const scores = {};
+        analysisData.forEach(d => {
+            // Calculate an aggregate score or use Safety score as primary metric for heatmap
+            // Using Safety Score as the primary indicator for "Risk" map
+            scores[d.name] = d.safety;
+        });
+        return scores;
+    }, [analysisData]);
+
     const getSeverityColor = (code) => {
-        const dangerZones = ['21050', '21100', '21150']; // 부산진구, 사하구, 사상구
-        const safeZones = ['21120', '21310']; // 강서구, 기장군
-        if (dangerZones.includes(code)) return '#ef4444'; // Red
-        if (safeZones.includes(code)) return '#22c5e0'; // Green
-        return '#f59e0b'; // Orange
+        const score = districtScores[code];
+        if (score === undefined) return '#94a3b8'; // Unknown (Slate-400)
+
+        // Lower score = Higher Risk (Red)
+        if (score < 70) return '#ef4444'; // Red (High Risk)
+        if (score < 80) return '#f59e0b'; // Orange (Medium Risk)
+        return '#22c5e0'; // Cyan/Blue (Low Risk / Safe)
     };
 
     const getSeverity = (districtCode) => {
-        const dangerZones = ['21050', '21100', '21150'];
-        const safeZones = ['21120', '21310'];
-        if (dangerZones.includes(districtCode)) return '높음';
-        if (safeZones.includes(districtCode)) return '낮음';
-        return '보통';
+        const score = districtScores[districtCode];
+        if (score === undefined) return '정보 없음';
+
+        if (score < 70) return '높음';
+        if (score < 80) return '보통';
+        return '낮음';
     };
 
-    // Filter Logic
+    // Helper to map Korean category to English ID
+    const mapCategory = (title) => {
+        if (!title) return 'other';
+        if (title.includes('보도') || title.includes('교통')) return 'transport';
+        if (title.includes('위생') || title.includes('환경')) return 'environment';
+        if (title.includes('안전') || title.includes('파손')) return 'safety';
+        if (title.includes('문화') || title.includes('관광')) return 'culture';
+        if (title.includes('주거') || title.includes('건축')) return 'housing';
+        return 'other';
+    };
+
+    // Filter Logic using Real Data
     const filteredData = useMemo(() => {
+        if (!insights) return [];
+
         const categoriesToShow = selectedCategories.length === 0
-            ? ['housing', 'environment', 'transport', 'safety', 'culture']
+            ? ['housing', 'environment', 'transport', 'safety', 'culture', 'other']
             : selectedCategories;
-        return allMockData.filter(point => categoriesToShow.includes(point.category) && (userType === 'all' || point.type === userType));
-    }, [selectedCategories, userType]);
+
+        return insights.map(insight => {
+            const cat = mapCategory(insight.title);
+            // Map 'survey' -> 'citizen', 'diagnosis' -> 'expert'
+            const type = insight.category === 'survey' ? 'citizen' : (insight.category === 'diagnosis' ? 'expert' : 'citizen');
+
+            return {
+                id: insight.id,
+                lat: insight.latitude,
+                lng: insight.longitude,
+                label: insight.title,
+                type: type,
+                category: cat,
+                severity: insight.severity ? insight.severity.toLowerCase() : 'medium',
+                proposer: insight.proposer,
+                proposerRole: type === 'expert' ? '진단 전문가' : '일반 시민',
+                date: insight.date ? insight.date.split(' ')[0] : '2025-12-14',
+                image: insight.image_url || "https://placehold.co/300x200?text=No+Image"
+            };
+        }).filter(point => {
+            // Filter by Category
+            if (!categoriesToShow.includes(point.category)) return false;
+            // Filter by User Type (Sidebar)
+            if (userType !== 'all' && point.type !== userType) return false;
+            // Filter by District (if selected) is handled by Map Bounds usually, but we can filter here too
+            if (selectedDistricts.length > 0) {
+                // We'd need district code in the mapped object. 
+                // Since insight has district_code, we can use it.
+                // But the current mapping structure doesn't include it. 
+                // However, the bounds logic mainly handles visibility.
+                // Let's rely on the map bounds/RegionFocus for visual focus, but showing all markers is often preferred unless filtered.
+            }
+            return true;
+        });
+    }, [selectedCategories, userType, insights, selectedDistricts]);
 
     // Style for GeoJSON
     const districtStyle = useCallback((feature) => {
@@ -237,6 +282,7 @@ const MapCanvas = memo(({ selectedCategories = [], userType = 'all', selectedDis
     // --------------------------------------------------------------------------------
     // Region Focus Component
     // --------------------------------------------------------------------------------
+    // Region Focus Component
     const RegionFocus = ({ selectedCodes, data }) => {
         const map = useMap();
 
@@ -307,21 +353,7 @@ const MapCanvas = memo(({ selectedCategories = [], userType = 'all', selectedDis
                     />
                 }
 
-                {/* Mock Detail Heatmap Layer (Show when districts are selected) */}
-                <Pane name="detail-heatmap" style={{ zIndex: 450 }}>
-                    {selectedDistricts.length > 0 && mockDetailPoints.map((pt, idx) => (
-                        <CircleMarker
-                            key={pt.id}
-                            center={[pt.lat, pt.lng]}
-                            radius={4 + (pt.value * 6)} // Random size
-                            pathOptions={{
-                                stroke: false,
-                                fillColor: pt.value > 0.7 ? '#dc2626' : (pt.value > 0.4 ? '#f59e0b' : '#10b981'),
-                                fillOpacity: 0.6
-                            }}
-                        />
-                    ))}
-                </Pane>
+
 
                 {/* Custom High Z-Index Pane for Popups to avoid overlapping */}
                 <Pane name="custom-popup-pane" style={{ zIndex: 1000 }} />

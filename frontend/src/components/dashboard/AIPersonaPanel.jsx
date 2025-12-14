@@ -56,7 +56,7 @@ export default function AIPersonaPanel({ personas = [], onSelectPersona, onChatC
                                     <span className="text-xs text-slate-500 mb-0.5">{persona.age}세</span>
                                 </div>
                                 <div className="flex flex-wrap gap-1">
-                                    {persona.tags && persona.tags.slice(0, 2).map((tag, idx) => (
+                                    {persona.tags && Array.isArray(persona.tags) && persona.tags.slice(0, 2).map((tag, idx) => (
                                         <span key={idx} className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px] text-slate-500">
                                             {tag}
                                         </span>

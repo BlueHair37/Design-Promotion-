@@ -1,0 +1,10 @@
+Checking http://localhost:8000/api/dashboard/personas with {'year': '2026', 'district': 'all'}...
+Status: 500
+ERROR RESPONSE: Internal Server Error
+Checking http://localhost:8000/api/dashboard/insights with {'year': '2026', 'district': 'all'}...
+Status: 500
+ERROR RESPONSE: Internal Server Error
+Checking http://localhost:8000/api/dashboard/analysis with {'year': '2026', 'district': 'all'}...
+Status: 200
+Count: 16
+First Item Sample: {"name": "21010", "housing": 84.94314275915468, "env": 68.57073178605032, "transport": 66.00788328924241, "safety": 83.16758624963701}

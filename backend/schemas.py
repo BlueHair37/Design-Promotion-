@@ -24,7 +24,14 @@ class InsightBase(BaseModel):
     type: str
     title: str
     description: str
-    icon: str
+    icon: Optional[str] = None
+    image_url: Optional[str] = None
+    severity: Optional[str] = None
+    date: Optional[str] = None
+    proposer: Optional[str] = None
+    latitude: float
+    longitude: float
+    category: Optional[str] = None
 
 class Insight(InsightBase):
     id: int
@@ -36,16 +43,16 @@ class PersonaBase(BaseModel):
     year: str
     name: str
     age: int
-    gender: str
+    gender: Optional[str] = None
     job: str
     image_emoji: str
     quote: str
     full_quote: str
-    tags: List[str]
-    pain_points: List[str]
-    suggestions: List[str]
-    expected_effects: List[str]
-    stats: Dict[str, Any]
+    tags: List[str] = []
+    pain_points: List[str] = []
+    suggestions: List[str] = []
+    expected_effects: List[str] = []
+    stats: Dict[str, Any] = {}
 
 class Persona(PersonaBase):
     id: int

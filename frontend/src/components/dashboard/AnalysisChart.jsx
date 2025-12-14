@@ -1,4 +1,5 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { DISTRICTS } from '../../data/constants';
 
 export default function AnalysisChart({ data, selectedDistricts = [] }) {
     const axisColor = '#64748b'; // slate-500
@@ -6,6 +7,11 @@ export default function AnalysisChart({ data, selectedDistricts = [] }) {
     const tooltipBg = '#ffffff';
     const tooltipBorder = '#e2e8f0';
     const tooltipText = '#0f172a';
+
+    const getDistrictName = (code) => {
+        const d = DISTRICTS.find(item => item.id === code);
+        return d ? d.name : code;
+    };
 
     const getTitle = () => {
         if (!selectedDistricts || selectedDistricts.length === 0) return '16개 구·군 비교 분석 (영역별 누적)';
@@ -48,6 +54,7 @@ export default function AnalysisChart({ data, selectedDistricts = [] }) {
                             height={isCompressed ? 60 : 30}
                             tick={{ fill: axisColor }}
                             tickLine={false}
+                            tickFormatter={getDistrictName}
                         />
                         <YAxis stroke={axisColor} fontSize={10} tick={{ fill: axisColor }} tickLine={false} axisLine={false} />
                         <Tooltip

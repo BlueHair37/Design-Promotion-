@@ -44,6 +44,13 @@ class DistrictInsight(Base):
     title = Column(String)
     description = Column(String)
     icon = Column(String)
+    image_url = Column(String)
+    severity = Column(String)
+    date = Column(String)
+    proposer = Column(String)
+    latitude = Column(Float)
+    longitude = Column(Float)
+    category = Column(String) # 'survey', 'diagnosis', 'report'
 
 class Persona(Base):
     __tablename__ = "personas"
@@ -58,7 +65,7 @@ class Persona(Base):
     image_emoji = Column(String)
     quote = Column(String)
     full_quote = Column(String)
-    tags = Column(String) # JSON string or comma separated
+    tags = Column(JSON) # Changed to JSON
     pain_points = Column(JSON)
     suggestions = Column(JSON)
     expected_effects = Column(JSON)

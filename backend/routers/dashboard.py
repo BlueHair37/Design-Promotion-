@@ -110,13 +110,21 @@ def get_personas(year: str, district: Optional[str] = None, db: Session = Depend
     parsed_results = []
     for row in results:
         # Create a dict from the row, manually parsing JSON fields if needed
-        # Actually simplest way is:
         row_dict = {c.name: getattr(row, c.name) for c in row.__table__.columns}
-        if isinstance(row_dict.get('tags'), str):
-             try:
-                 row_dict['tags'] = json.loads(row_dict['tags'])
-             except:
-                 row_dict['tags'] = []
+        
+        # Ensure List fields are actually lists
+        list_fields = ['tags', 'pain_points', 'suggestions', 'expected_effects']
+        for field in list_fields:
+            val = row_dict.get(field)
+            if isinstance(val, str):
+                try:
+                    row_dict[field] = json.loads(val)
+                except:
+                    row_dict[field] = []
+            elif val is None:
+                 row_dict[field] = []
+            # If it's already a list (SQLAlchemy JSON type), keep it
+            
         parsed_results.append(row_dict)
 
     return parsed_results
